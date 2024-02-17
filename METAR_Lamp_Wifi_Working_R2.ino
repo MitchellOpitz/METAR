@@ -180,51 +180,8 @@ bool getMetars(){
       } else airportString = airportString + "," + airports;
     }
   }
-
-  BearSSL::WiFiClientSecure client;
-  client.setInsecure();
-  Serial.println("\nStarting connection to server...");
-  // if you get a connection, report back via serial:
-  if (!client.connect(SERVER, 443)) {
-    Serial.println("Connection failed!");
-    client.stop();
-    return false;
-  } else {
-    Serial.println("Connected ...");
-    Serial.print("GET ");
-    Serial.print(BASE_URI);
-    Serial.print(airportString);
-    Serial.println(" HTTP/1.1");
-    Serial.print("Host: ");
-    Serial.println(SERVER);
-    Serial.println("User-Agent: LED Map Client");
-    Serial.println("Connection: close");
-    Serial.println();
-    // Make a HTTP request, and print it to console:
-    client.print("GET ");
-    client.print(BASE_URI);
-    client.print(airportString);
-    client.println(" HTTP/1.1");
-    client.print("Host: ");
-    client.println(SERVER);
-    client.println("User-Agent: LED Sectional Client");
-    client.println("Connection: close");
-    client.println();
-    client.flush();
-    t = millis(); // start time
-    FastLED.clear();
-
-    Serial.print("Getting data");
-
-    while (!client.connected()) {
-      if ((millis() - t) >= (READ_TIMEOUT * 1000)) {
-        Serial.println("---Timeout---");
-        client.stop();
-        return false;
-      }
-      Serial.print(".");
-      delay(1000);
-    }
+  
+  retrieveMetarData(airports);
 
     Serial.println();
 
@@ -389,4 +346,42 @@ void initializeLeds() {
     BRIGHTNESS = BRIGHTNESS / 4.5; 
     FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_AIRPORTS).setCorrection(TypicalLEDStrip);
     FastLED.setBrightness(BRIGHTNESS);
+}
+
+bool retrieveMetarData(String airports) {
+    BearSSL::WiFiClientSecure client;
+    client.setInsecure();
+
+    if (!client.connect(SERVER, 443)) {
+        Serial.println("Connection failed!");
+        client.stop();
+        return false;
+    }
+
+    // Construct and send HTTP request
+    String request = "GET " + String(BASE_URI) + airports + " HTTP/1.1\r\n" +
+                     "Host: " + String(SERVER) + "\r\n" +
+                     "User-Agent: LED Sectional Client\r\n" +
+                     "Connection: close\r\n\r\n";
+    client.print(request);
+
+    // Wait for response
+    unsigned long timeout = millis();
+    while (!client.available()) {
+        if (millis() - timeout > 5000) {
+            Serial.println("Timeout waiting for response");
+            client.stop();
+            return false;
+        }
+    }
+
+    // Read and process response
+    while (client.available()) {
+        // Read response data
+        String line = client.readStringUntil('\r');
+        // Process response data (parse METARs)
+    }
+
+    client.stop();
+    return true;
 }
