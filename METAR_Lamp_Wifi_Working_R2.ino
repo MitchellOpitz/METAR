@@ -85,22 +85,6 @@ int BRIGHTNESS = analogRead(BRIGHT_PIN);
   FastLED.setBrightness(BRIGHTNESS);
   fill_solid(leds, NUM_AIRPORTS, CRGB::Orange); // indicate status with LEDs, but only on first run or error
     FastLED.show();
-
- bool res;
-    
-    res = wm.autoConnect("MetarWiFi"); // anonymous ap
-    
-
-    if(!res) {
-        Serial.println("Failed to connect");
-        // ESP.restart();
-    } 
-    else {
-        //if you get here you have connected to the WiFi    
-        Serial.println("connected...yeey :)");
-
-   //end wifi setup     
-  
 }
  
  
@@ -394,4 +378,14 @@ String readStringFromEEPROM(char add) {
   data[len] = '\0';
 
   return String(data);
+}
+
+void connectToWifi() {
+    WiFiManager wifiManager;
+    wifiManager.setConfigPortalBlocking(true);  // Disables WifI configuration portal.  May not be needed.
+    if (!wifiManager.autoConnect("MetarWiFi")) {
+        Serial.println("Failed to connect to WiFi or hit timeout.");
+    } else {
+        Serial.println("Connected to WiFi.");
+    }
 }
