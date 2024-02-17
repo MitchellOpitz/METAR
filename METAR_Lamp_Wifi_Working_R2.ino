@@ -15,7 +15,7 @@ using namespace std;
 int timeout = 120;  //second to run network reload
 String airports = ""; // your airport ICAO indetifier. you can also used VFR, MVFR, IFR or LIFR for constant lighting. 
 void writeString(char add,String data);
-String read_String(char add);
+String readStringFromEEPROM(char add);
 String airportString = "";
 WiFiManager wm;
 
@@ -125,7 +125,7 @@ void loop() {
   digitalWrite(LED_BUILTIN, LOW); // on if we're awake
 
   
-airports = read_String(10);
+airports = readStringFromEEPROM(10);
 
    Serial.print("Airport: ");
   Serial.println(airports);
@@ -383,19 +383,19 @@ void writeString(char add,String data)
 }
 
 
-String read_String(char add)
-{
-  int i;
-  char data[100]; //Max 100 Bytes
-  int len=0;
-  unsigned char k;
-  k=EEPROM.read(add);
-  while(k != '\0' && len<500)   //Read until null character
-  {    
-    k=EEPROM.read(add+len);
-    data[len]=k;
+String readStringFromEEPROM(char add) {
+  const int maxLength = 100;
+  char data[maxLength + 1];
+  int len = 0;
+  char currentChar;
+
+  do {
+    currentChar = EEPROM.read(add + len);
+    data[len] = currentChar;
     len++;
-  }
-  data[len]='\0';
+  } while (currentChar != '\0' && len < maxLength);
+
+  data[len] = '\0';
+
   return String(data);
 }
