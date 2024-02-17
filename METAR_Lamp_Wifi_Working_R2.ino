@@ -71,13 +71,8 @@ connectToWifi();
   pinMode(TRIGGER_PIN, INPUT_PULLUP); //defining the pinmode for updating the wifi info
   pinMode(LED_BUILTIN, OUTPUT); // give us control of the onboard LED
   digitalWrite(LED_BUILTIN, LOW);
-int BRIGHTNESS = analogRead(BRIGHT_PIN);
-    BRIGHTNESS = BRIGHTNESS / 4.5; 
 
-  // Initialize LEDs
-  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_AIRPORTS).setCorrection(TypicalLEDStrip);
- 
-  FastLED.setBrightness(BRIGHTNESS);
+initializeLeds();
   fill_solid(leds, NUM_AIRPORTS, CRGB::Orange); // indicate status with LEDs, but only on first run or error
     FastLED.show();
 }
@@ -387,4 +382,11 @@ void connectToWifi() {
 void configureWiFiManager() {
     wifiManager.setDebugOutput(false);
     wifiManager.resetSettings();
+}
+
+void initializeLeds() {
+    int BRIGHTNESS = analogRead(BRIGHT_PIN);
+    BRIGHTNESS = BRIGHTNESS / 4.5; 
+    FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_AIRPORTS).setCorrection(TypicalLEDStrip);
+    FastLED.setBrightness(BRIGHTNESS);
 }
