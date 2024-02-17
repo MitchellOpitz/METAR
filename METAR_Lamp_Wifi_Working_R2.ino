@@ -185,79 +185,8 @@ bool getMetars(){
 
     Serial.println();
 
-    while (client.connected()) {
-      if ((c = client.read()) >= 0) {
-        yield(); // Otherwise the WiFi stack can crash
-        currentLine += c;
-        if (c == '\n') currentLine = "";
-        if (currentLine.endsWith("<station_id>")) { // start paying attention
-          if (!led.empty()) { // we assume we are recording results at each change in airport
-            for (vector<unsigned short int>::iterator it = led.begin(); it != led.end(); ++it) {
-              doColor(currentAirport, *it, currentWind.toInt(), currentGusts.toInt(), currentCondition, currentWxstring);
-            }
-            led.clear();
-          }
-          currentAirport = ""; // Reset everything when the airport changes
-          readingAirport = true;
-          currentCondition = "";
-          currentWind = "";
-          currentGusts = "";
-          currentWxstring = "";
-        } else if (readingAirport) {
-          if (!currentLine.endsWith("<")) {
-            currentAirport += c;
-          } else {
-            readingAirport = false;
-            for (unsigned short int i = 0; i < NUM_AIRPORTS; i++) {
-              if (airports == currentAirport) {
-                led.push_back(i);
-              }
-            }
-          }
-        } else if (currentLine.endsWith("<wind_speed_kt>")) {
-          readingWind = true;
-        } else if (readingWind) {
-          if (!currentLine.endsWith("<")) {
-            currentWind += c;
-          } else {
-            readingWind = false;
-          }
-        } else if (currentLine.endsWith("<wind_gust_kt>")) {
-          readingGusts = true;
-        } else if (readingGusts) {
-          if (!currentLine.endsWith("<")) {
-            currentGusts += c;
-          } else {
-            readingGusts = false;
-          }
-        } else if (currentLine.endsWith("<flight_category>")) {
-          readingCondition = true;
-        } else if (readingCondition) {
-          if (!currentLine.endsWith("<")) {
-            currentCondition += c;
-          } else {
-            readingCondition = false;
-          }
-        } else if (currentLine.endsWith("<wx_string>")) {
-          readingWxstring = true;
-        } else if (readingWxstring) {
-          if (!currentLine.endsWith("<")) {
-            currentWxstring += c;
-          } else {
-            readingWxstring = false;
-          }
-        }
-        t = millis(); // Reset timeout clock
-      } else if ((millis() - t) >= (READ_TIMEOUT * 1000)) {
-        Serial.println("---Timeout---");
-        fill_solid(leds, NUM_AIRPORTS, CRGB::Cyan); // indicate status with LEDs
-        FastLED.show();
-        ledStatus = true;
-        client.stop();
-        return false;
-      }
-    }
-  }
+parseMetarData();  // Need data string.
+
   // need to doColor this for the last airport
   for (vector<unsigned short int>::iterator it = led.begin(); it != led.end(); ++it) {
     doColor(currentAirport, *it, currentWind.toInt(), currentGusts.toInt(), currentCondition, currentWxstring);
@@ -384,4 +313,87 @@ bool retrieveMetarData(String airports) {
 
     client.stop();
     return true;
+}
+
+void parseMetarData(String data) {
+    String currentAirport = "";
+    String currentCondition = "";
+    String currentWind = "";
+    String currentGusts = "";
+    String currentWxstring = "";
+
+    bool readingAirport = false;
+    bool readingWind = false;
+    bool readingGusts = false;
+    bool readingCondition = false;
+    bool readingWxstring = false;
+
+    for (int i = 0; i < data.length(); i++) {
+        char c = data.charAt(i);
+
+        if (c == '\n') {
+            currentLine = "";
+            continue;
+        }
+
+        currentLine += c;
+
+        if (currentLine.endsWith("<station_id>")) {
+            if (!led.empty()) {
+                for (auto it = led.begin(); it != led.end(); ++it) {
+                    doColor(currentAirport, *it, currentWind.toInt(), currentGusts.toInt(), currentCondition, currentWxstring);
+                }
+                led.clear();
+            }
+            currentAirport = "";
+            readingAirport = true;
+            currentCondition = "";
+            currentWind = "";
+            currentGusts = "";
+            currentWxstring = "";
+        } else if (readingAirport) {
+            if (!currentLine.endsWith("<")) {
+                currentAirport += c;
+            } else {
+                readingAirport = false;
+                for (unsigned short int i = 0; i < NUM_AIRPORTS; i++) {
+                    if (airports == currentAirport) {
+                        led.push_back(i);
+                    }
+                }
+            }
+        } else if (currentLine.endsWith("<wind_speed_kt>")) {
+            readingWind = true;
+        } else if (readingWind) {
+            if (!currentLine.endsWith("<")) {
+                currentWind += c;
+            } else {
+                readingWind = false;
+            }
+        } else if (currentLine.endsWith("<wind_gust_kt>")) {
+            readingGusts = true;
+        } else if (readingGusts) {
+            if (!currentLine.endsWith("<")) {
+                currentGusts += c;
+            } else {
+                readingGusts = false;
+            }
+        } else if (currentLine.endsWith("<flight_category>")) {
+            readingCondition = true;
+        } else if (readingCondition) {
+            if (!currentLine.endsWith("<")) {
+                currentCondition += c;
+            } else {
+                readingCondition = false;
+            }
+        } else if (currentLine.endsWith("<wx_string>")) {
+            readingWxstring = true;
+        } else if (readingWxstring) {
+            if (!currentLine.endsWith("<")) {
+                currentWxstring += c;
+            } else {
+                readingWxstring = false;
+            }
+        }
+    }
 }
