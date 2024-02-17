@@ -14,7 +14,7 @@ using namespace std;
 
 int timeout = 120;  //second to run network reload
 String airports = ""; // your airport ICAO indetifier. you can also used VFR, MVFR, IFR or LIFR for constant lighting. 
-void writeString(char add,String data);
+void writeStringToEEPROM(char add,String data);
 String readStringFromEEPROM(char add);
 String airportString = "";
 WiFiManager wm;
@@ -109,7 +109,7 @@ String data;
 data = custom_text_box.getValue();  //pulls the airport data down
 if (data != ""){
 
-writeString(10, data);
+writeStringToEEPROM(10, data);
 
 }
 
@@ -370,18 +370,14 @@ void doColor(String identifier, unsigned short int led, int wind, int gusts, Str
   leds[led] = color;
 }
 
-void writeString(char add,String data)
-{
+void writeStringToEEPROM(char add, String data) {
   int _size = data.length();
-  int i;
-  for(i=0;i<_size;i++)
-  {
-    EEPROM.write(add+i,data[i]);
+  for (int i = 0; i < _size; i++) {
+    EEPROM.write(add + i, data[i]);
   }
-  EEPROM.write(add+_size,'\0');   //Add termination null character for String Data
+  EEPROM.write(add + _size, '\0');
   EEPROM.commit();
 }
-
 
 String readStringFromEEPROM(char add) {
   const int maxLength = 100;
