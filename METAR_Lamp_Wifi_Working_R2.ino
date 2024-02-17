@@ -17,7 +17,7 @@ String airports = ""; // your airport ICAO indetifier. you can also used VFR, MV
 void writeStringToEEPROM(char add,String data);
 String readStringFromEEPROM(char add);
 String airportString = "";
-WiFiManager wm;
+WiFiManager wifiManager;
 
 // Define the array of leds
 CRGB leds[NUM_AIRPORTS];
@@ -55,16 +55,11 @@ void setup() {
   Serial.begin(115200);
     EEPROM.begin(512);
 
-
-
- wm.setDebugOutput(false);
- wm.resetSettings();   //removes network settings
-
- 
-
+configureWiFiManager();
+connectToWifi();
 
  WiFiManagerParameter custom_text_box("ICAO", "Enter Your Aiport Here", "", 4);
- wm.addParameter(&custom_text_box);
+ wifiManager.addParameter(&custom_text_box);
 
    
  //wifi setup
@@ -125,9 +120,9 @@ airports = readStringFromEEPROM(10);
     if (ledStatus) fill_solid(leds, NUM_AIRPORTS, CRGB::Orange); // indicate status with LEDs, but only on first run or error
     FastLED.show();
     WiFi.mode(WIFI_STA);
-    wm.setConfigPortalTimeout(WIFI_TIMEOUT);
+    wifiManager.setConfigPortalTimeout(WIFI_TIMEOUT);
   }
-      if(wm.autoConnect("MetarAP")){
+      if(wifiManager.autoConnect("MetarAP")){
          Serial.println("Connected to local network");
           if (ledStatus) fill_solid(leds, NUM_AIRPORTS, CRGB::Purple); // indicate status with LEDs
           FastLED.show();
@@ -381,11 +376,15 @@ String readStringFromEEPROM(char add) {
 }
 
 void connectToWifi() {
-    WiFiManager wifiManager;
     wifiManager.setConfigPortalBlocking(true);  // Disables WifI configuration portal.  May not be needed.
     if (!wifiManager.autoConnect("MetarWiFi")) {
         Serial.println("Failed to connect to WiFi or hit timeout.");
     } else {
         Serial.println("Connected to WiFi.");
     }
+}
+
+void configureWiFiManager() {
+    wifiManager.setDebugOutput(false);
+    wifiManager.resetSettings();
 }
