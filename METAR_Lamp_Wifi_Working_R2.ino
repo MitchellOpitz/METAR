@@ -1,31 +1,38 @@
+// 1: Organize includes
 #include <ESP8266WiFi.h>
 #include <FastLED.h>
 #include <vector>
 #include <EEPROM.h>
-#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
+#include <WiFiManager.h>
+
 using namespace std;
 
+// 2: Define constants
 #define FASTLED_ESP8266_RAW_PIN_ORDER
-#define NUM_AIRPORTS 25 // This is really the number of LEDs
-#define LOOP_INTERVAL 300000 // ms - interval between brightness updates and lightning strikes
+#define NUM_AIRPORTS 25
+#define LOOP_INTERVAL 300000
 #define TRIGGER_PIN D4
-#define USE_LIGHT_SENSOR false // Set USE_LIGHT_SENSOR to true if you're using any light sensor.
+#define USE_LIGHT_SENSOR false
 #define LIGHT_SENSOR_TSL2561 false
-
-int timeout = 120;  //second to run network reload
-String airports = ""; // your airport ICAO indetifier. you can also used VFR, MVFR, IFR or LIFR for constant lighting. 
-void writeStringToEEPROM(char add,String data);
-String readStringFromEEPROM(char add);
-String airportString = "";
-WiFiManager wifiManager;
-
-// Define the array of leds
-CRGB leds[NUM_AIRPORTS];
-#define DATA_PIN    D2 // Kits shipped after March 1, 2019 should use 14. Earlier kits us 5.
+#define DATA_PIN    D2
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
-//#define BRIGHTNESS 100 // 20-30 recommended. If using a light sensor, this is the initial brightness on boot.
 #define BRIGHT_PIN A0
+#define READ_TIMEOUT 15
+#define WIFI_TIMEOUT 60
+#define RETRY_TIMEOUT 15000
+#define SERVER "aviationweather.gov"
+#define BASE_URI "/cgi-bin/data/dataserver.php?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=constraint&stationString="
+
+// Step 3: Initialize variables
+int timeout = 120;
+String airports = "";
+String airportString = "";
+WiFiManager wifiManager;
+CRGB leds[NUM_AIRPORTS];
+String data;
+unsigned int loops = -1;
+int status = WL_IDLE_STATUS;
 
 /* ----------------------------------------------------------------------- */
 
