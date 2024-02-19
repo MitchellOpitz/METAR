@@ -8,16 +8,12 @@
 using namespace std;
 
 // 2: Define constants
-#define FASTLED_ESP8266_RAW_PIN_ORDER
 #define NUM_AIRPORTS 25
 #define LOOP_INTERVAL 300000
 #define TRIGGER_PIN D4
-#define USE_LIGHT_SENSOR false
-#define LIGHT_SENSOR_TSL2561 false
 #define DATA_PIN    D2
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
-#define BRIGHT_PIN A0
 #define READ_TIMEOUT 15 // Cancel query if no data received (seconds)
 #define WIFI_TIMEOUT 60 // in seconds
 #define RETRY_TIMEOUT 15000 // in ms
@@ -33,6 +29,12 @@ CRGB leds[NUM_AIRPORTS];
 String data;
 unsigned int loops = -1;
 int status = WL_IDLE_STATUS;
+
+// Possibly unused
+#define FASTLED_ESP8266_RAW_PIN_ORDER
+#define USE_LIGHT_SENSOR false
+#define LIGHT_SENSOR_TSL2561 false
+#define BRIGHT_PIN A0
 
 /* ----------------------------------------------------------------------- */
 
