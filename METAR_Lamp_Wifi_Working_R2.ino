@@ -18,9 +18,9 @@ using namespace std;
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
 #define BRIGHT_PIN A0
-#define READ_TIMEOUT 15
-#define WIFI_TIMEOUT 60
-#define RETRY_TIMEOUT 15000
+#define READ_TIMEOUT 15 // Cancel query if no data received (seconds)
+#define WIFI_TIMEOUT 60 // in seconds
+#define RETRY_TIMEOUT 15000 // in ms
 #define SERVER "aviationweather.gov"
 #define BASE_URI "/cgi-bin/data/dataserver.php?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=constraint&stationString="
 
@@ -37,23 +37,8 @@ int status = WL_IDLE_STATUS;
 /* ----------------------------------------------------------------------- */
 
  
-std::vector<unsigned short int> lightningLeds;
-
-#define DEBUG false
-
-#define READ_TIMEOUT 15 // Cancel query if no data received (seconds)
-#define WIFI_TIMEOUT 60 // in seconds
-#define RETRY_TIMEOUT 15000 // in ms
-
-#define SERVER "aviationweather.gov"
-#define BASE_URI "/cgi-bin/data/dataserver.php?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=constraint&stationString="
-
+#define DEBUG false  // MO - Add debug mode
 boolean ledStatus = true; // used so leds only indicate connection status on first boot, or after failure
-int loops = -1;
-
-
-int status = WL_IDLE_STATUS;
-
 
 
 void setup() {
@@ -160,7 +145,6 @@ airports = readStringFromEEPROM(10);
 }
 
 bool getMetars(){
-  lightningLeds.clear(); // clear out existing lightning LEDs since they're global
   fill_solid(leds, NUM_AIRPORTS, CRGB::Black); // Set everything to black just in case there is no report
   uint32_t t;
   char c;
