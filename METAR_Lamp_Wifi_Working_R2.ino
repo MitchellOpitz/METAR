@@ -62,65 +62,6 @@ void loop() {
     handleDelay();
 }
 
-/*
-void loop() {
-  digitalWrite(LED_BUILTIN, LOW); // on if we're awake
-
-  
-airports = readStringFromEEPROM(10);
-
-   Serial.print("Airport: ");
-  Serial.println(airports);
-
-  int c;
-  loops++;
-  Serial.print("Loop: ");
-  Serial.println(loops);
-  unsigned int loopThreshold = 1;
-  
-  // Connect to WiFi. We always want a wifi connection for the ESP8266
-  if (WiFi.status() != WL_CONNECTED) {
-    if (ledStatus) fill_solid(leds, NUM_AIRPORTS, CRGB::Orange); // indicate status with LEDs, but only on first run or error
-    FastLED.show();
-    WiFi.mode(WIFI_STA);
-    wifiManager.setConfigPortalTimeout(WIFI_TIMEOUT);
-  }
-      if(wifiManager.autoConnect("MetarAP")){
-         Serial.println("Connected to local network");
-          if (ledStatus) fill_solid(leds, NUM_AIRPORTS, CRGB::Purple); // indicate status with LEDs
-          FastLED.show();
-          ledStatus = false;
-     } 
-      else {
-         Serial.println("Failed to connect to local network or hit timeout");
-          fill_solid(leds, NUM_AIRPORTS, CRGB::Orange);
-          FastLED.show();
-          ledStatus = true;
-          return;
-      }          
- 
-
-  if (loops >= loopThreshold || loops == 0) {
-    loops = 0;
-    if (DEBUG) {
-      fill_gradient_RGB(leds, NUM_AIRPORTS, CRGB::Red, CRGB::Blue); // Just let us know we're running
-      FastLED.show();
-    }
-
-    Serial.println("Getting METARs ...");
-    if (getMetars()) {
-      Serial.println("Refreshing LEDs.");
-      FastLED.show();
-      digitalWrite(LED_BUILTIN, HIGH);
-      delay(LOOP_INTERVAL); // try again if unsuccessful
-    }
-  } else {
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(LOOP_INTERVAL); // pause during the interval
-  }
-}
- */
-
  void readAirportData() {
     airports = readStringFromEEPROM(10);
     Serial.print("Airport: ");
