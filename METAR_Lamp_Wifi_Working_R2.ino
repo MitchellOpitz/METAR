@@ -19,6 +19,7 @@ using namespace std;
 #define RETRY_TIMEOUT 15000 // in ms
 #define SERVER "aviationweather.gov"
 #define BASE_URI "/cgi-bin/data/dataserver.php?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=constraint&stationString="
+#define POT_PIN A0
 
 // Step 3: Initialize variables
 int timeout = 120;
@@ -63,6 +64,7 @@ void loop() {
     parseMetarData();
     doColor();
     handleDelay();
+    updateBrightness();
 }
 
 void doColor(String identifier, unsigned short int led, int wind, int gusts, String condition, String wxstring) {
@@ -309,4 +311,10 @@ void processLine(String currentAirport, String currentCondition, int currentWind
             }
         }
     }
+}
+
+void updateBrightness() {
+    int potValue = analogRead(POT_PIN);
+    int brightness = map(potValue, 0, 1023, 0, 255);
+    FastLED.setBrightness(brightness);
 }
