@@ -46,6 +46,7 @@ void setup() {
     EEPROM.begin(512);
 
     configureWiFi();
+    configureWiFiManager();
     setupWiFiManager();
     setupCustomParameter();
     initializePins();
