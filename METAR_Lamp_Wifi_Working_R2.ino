@@ -57,7 +57,7 @@ void setup() {
 void loop() {
     connectToWifi();
     readAirportData();
-    retrieveMetarData();
+    String metarData = retrieveMetarData(airports);
     parseMetarData();
     doColor();
     handleDelay();
@@ -67,59 +67,6 @@ void loop() {
     airports = readStringFromEEPROM(10);
     Serial.print("Airport: ");
     Serial.println(airports);
-}
-
-bool retrieveMetarData(){
-  fill_solid(leds, NUM_AIRPORTS, CRGB::Black); // Set everything to black just in case there is no report
-  uint32_t t;
-  char c;
-  boolean readingAirport = false;
-  boolean readingCondition = false;
-  boolean readingWind = false;
-  boolean readingGusts = false;
-  boolean readingWxstring = false;
-
-  std::vector<unsigned short int> led;
-  String currentAirport = "";
-  String currentCondition = "";
-  String currentLine = "";
-  String currentWind = "";
-  String currentGusts = "";
-  String currentWxstring = "";
-  String airportString = "";
-  bool firstAirport = true;
-  for (int i = 0; i < NUM_AIRPORTS; i++) {
-    if (airports != "NULL" && airports != "VFR" && airports != "MVFR" && airports != "WVFR" && airports != "IFR" && airports != "LIFR") {
-      if (firstAirport) {
-        firstAirport = false;
-        airportString = airports;
-      } else airportString = airportString + "," + airports;
-    }
-  }
-  
-  retrieveMetarData(airports);
-
-    Serial.println();
-
-parseMetarData();  // Need data string.
-
-  // need to doColor this for the last airport
-  for (vector<unsigned short int>::iterator it = led.begin(); it != led.end(); ++it) {
-    doColor(currentAirport, *it, currentWind.toInt(), currentGusts.toInt(), currentCondition, currentWxstring);
-  }
-  led.clear();
-
-  // Do the key LEDs now if they exist
-  for (int i = 0; i < (NUM_AIRPORTS); i++) {
-    // Use this opportunity to set colors for LEDs in our key then build the request string
-    if (airports == "VFR") leds[i] = CRGB::Green;
-    else if (airports == "MVFR") leds[i] = CRGB::Blue;
-    else if (airports == "IFR") leds[i] = CRGB::Red;
-    else if (airports == "LIFR") leds[i] = CRGB::Magenta;
-  }
-
-  client.stop();
-  return true;
 }
 
 void doColor(String identifier, unsigned short int led, int wind, int gusts, String condition, String wxstring) {
@@ -199,14 +146,14 @@ void initializeLeds() {
     FastLED.setBrightness(BRIGHTNESS);
 }
 
-bool retrieveMetarData(String airports) {
+String retrieveMetarData(String airports) {
     BearSSL::WiFiClientSecure client;
     client.setInsecure();
 
     if (!client.connect(SERVER, 443)) {
         Serial.println("Connection failed!");
         client.stop();
-        return false;
+        return ""; // Return an empty string indicating failure
     }
 
     // Construct and send HTTP request
@@ -222,19 +169,20 @@ bool retrieveMetarData(String airports) {
         if (millis() - timeout > 5000) {
             Serial.println("Timeout waiting for response");
             client.stop();
-            return false;
+            return ""; // Return an empty string indicating timeout
         }
     }
 
     // Read and process response
+    String responseData = "";
     while (client.available()) {
         // Read response data
         String line = client.readStringUntil('\r');
-        // Process response data (parse METARs)
+        responseData += line; // Append each line to the response data
     }
 
     client.stop();
-    return true;
+    return responseData; // Return the received data
 }
 
 void parseMetarData(String data) {
