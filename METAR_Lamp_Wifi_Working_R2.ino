@@ -40,6 +40,7 @@ int status = WL_IDLE_STATUS;
 #define DEBUG false  // MO - Add debug mode
 boolean ledStatus = true; // used so leds only indicate connection status on first boot, or after failure
 
+
 void setup() {
     Serial.begin(115200);
     EEPROM.begin(512);
