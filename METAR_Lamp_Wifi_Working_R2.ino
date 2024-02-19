@@ -219,11 +219,11 @@ String retrieveMetarData(String airports) {
 }
 
 void parseMetarData(String data) {
-    String currentAirport = "";
-    String currentCondition = "";
-    String currentWind = "";
-    String currentGusts = "";
-    String currentWxstring = "";
+    String currentAirport;
+    String currentCondition;
+    int currentWind = 0;
+    int currentGusts = 0;
+    String currentWxstring;
 
     bool readingAirport = false;
     bool readingWind = false;
@@ -235,67 +235,75 @@ void parseMetarData(String data) {
         char c = data.charAt(i);
 
         if (c == '\n') {
-            currentLine = "";
+            processLine(currentAirport, currentCondition, currentWind, currentGusts, currentWxstring);
+            resetValues(currentAirport, currentWind, currentGusts, currentCondition, currentWxstring);
             continue;
         }
 
-        currentLine += c;
+        updateCurrentField(c, data, i, currentAirport, currentWind, currentGusts, currentCondition, currentWxstring, 
+                            readingAirport, readingWind, readingGusts, readingCondition, readingWxstring);
+    }
 
-        if (currentLine.endsWith("<station_id>")) {
-            if (!led.empty()) {
-                for (auto it = led.begin(); it != led.end(); ++it) {
-                    doColor(currentAirport, *it, currentWind.toInt(), currentGusts.toInt(), currentCondition, currentWxstring);
-                }
-                led.clear();
-            }
-            currentAirport = "";
-            readingAirport = true;
-            currentCondition = "";
-            currentWind = "";
-            currentGusts = "";
-            currentWxstring = "";
-        } else if (readingAirport) {
-            if (!currentLine.endsWith("<")) {
-                currentAirport += c;
-            } else {
-                readingAirport = false;
-                for (unsigned short int i = 0; i < NUM_AIRPORTS; i++) {
-                    if (airports == currentAirport) {
-                        led.push_back(i);
-                    }
-                }
-            }
-        } else if (currentLine.endsWith("<wind_speed_kt>")) {
-            readingWind = true;
-        } else if (readingWind) {
-            if (!currentLine.endsWith("<")) {
-                currentWind += c;
-            } else {
-                readingWind = false;
-            }
-        } else if (currentLine.endsWith("<wind_gust_kt>")) {
-            readingGusts = true;
-        } else if (readingGusts) {
-            if (!currentLine.endsWith("<")) {
-                currentGusts += c;
-            } else {
-                readingGusts = false;
-            }
-        } else if (currentLine.endsWith("<flight_category>")) {
-            readingCondition = true;
-        } else if (readingCondition) {
-            if (!currentLine.endsWith("<")) {
-                currentCondition += c;
-            } else {
-                readingCondition = false;
-            }
-        } else if (currentLine.endsWith("<wx_string>")) {
-            readingWxstring = true;
-        } else if (readingWxstring) {
-            if (!currentLine.endsWith("<")) {
-                currentWxstring += c;
-            } else {
-                readingWxstring = false;
+    // Process the last airport data
+    processLine(currentAirport, currentCondition, currentWind, currentGusts, currentWxstring);
+}
+
+void updateCurrentField(char c, String data, int& i, String& currentAirport, int& currentWind, int& currentGusts,
+                        String& currentCondition, String& currentWxstring, bool& readingAirport, bool& readingWind,
+                        bool& readingGusts, bool& readingCondition, bool& readingWxstring) {
+    static String currentLine;
+    currentLine += c;
+
+    if (currentLine.endsWith("<station_id>")) {
+        readingAirport = true;
+        currentLine = "";
+    } else if (readingAirport) {
+        updateField(currentLine, "<station_id>", currentAirport, readingAirport);
+    } else if (currentLine.endsWith("<wind_speed_kt>")) {
+        readingWind = true;
+        currentLine = "";
+    } else if (readingWind) {
+        updateField(currentLine, "<wind_speed_kt>", currentWind, readingWind);
+    } else if (currentLine.endsWith("<wind_gust_kt>")) {
+        readingGusts = true;
+        currentLine = "";
+    } else if (readingGusts) {
+        updateField(currentLine, "<wind_gust_kt>", currentGusts, readingGusts);
+    } else if (currentLine.endsWith("<flight_category>")) {
+        readingCondition = true;
+        currentLine = "";
+    } else if (readingCondition) {
+        updateField(currentLine, "<flight_category>", currentCondition, readingCondition);
+    } else if (currentLine.endsWith("<wx_string>")) {
+        readingWxstring = true;
+        currentLine = "";
+    } else if (readingWxstring) {
+        updateField(currentLine, "<wx_string>", currentWxstring, readingWxstring);
+    }
+}
+
+template<typename T>
+void updateField(String& currentLine, const String& delimiter, T& field, bool& readingField) {
+    if (!currentLine.endsWith("<")) {
+        field = currentLine.toInt();
+    } else {
+        readingField = false;
+    }
+}
+
+void resetValues(String& currentAirport, int& currentWind, int& currentGusts, String& currentCondition, String& currentWxstring) {
+    currentAirport = "";
+    currentWind = 0;
+    currentGusts = 0;
+    currentCondition = "";
+    currentWxstring = "";
+}
+
+void processLine(String currentAirport, String currentCondition, int currentWind, int currentGusts, String currentWxstring) {
+    if (!currentAirport.isEmpty()) {
+        for (unsigned short int i = 0; i < NUM_AIRPORTS; i++) {
+            if (airports == currentAirport) {
+                doColor(currentAirport, i, currentWind, currentGusts, currentCondition, currentWxstring);
             }
         }
     }
