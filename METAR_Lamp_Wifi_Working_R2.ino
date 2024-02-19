@@ -8,21 +8,18 @@
 using namespace std;
 
 // 2: Define constants
-#define FASTLED_ESP8266_RAW_PIN_ORDER
 #define NUM_AIRPORTS 25
 #define LOOP_INTERVAL 300000
 #define TRIGGER_PIN D4
-#define USE_LIGHT_SENSOR false
-#define LIGHT_SENSOR_TSL2561 false
 #define DATA_PIN    D2
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
-#define BRIGHT_PIN A0
 #define READ_TIMEOUT 15 // Cancel query if no data received (seconds)
 #define WIFI_TIMEOUT 60 // in seconds
 #define RETRY_TIMEOUT 15000 // in ms
 #define SERVER "aviationweather.gov"
 #define BASE_URI "/cgi-bin/data/dataserver.php?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=constraint&stationString="
+#define POT_PIN A0
 
 // Step 3: Initialize variables
 int timeout = 120;
@@ -33,6 +30,12 @@ CRGB leds[NUM_AIRPORTS];
 String data;
 unsigned int loops = -1;
 int status = WL_IDLE_STATUS;
+
+// Possibly unused
+#define FASTLED_ESP8266_RAW_PIN_ORDER
+#define USE_LIGHT_SENSOR false
+#define LIGHT_SENSOR_TSL2561 false
+#define BRIGHT_PIN A0
 
 /* ----------------------------------------------------------------------- */
 
@@ -61,6 +64,7 @@ void loop() {
     parseMetarData();
     doColor();
     handleDelay();
+    updateBrightness();
 }
 
 void doColor(String identifier, unsigned short int led, int wind, int gusts, String condition, String wxstring) {
@@ -307,4 +311,10 @@ void processLine(String currentAirport, String currentCondition, int currentWind
             }
         }
     }
+}
+
+void updateBrightness() {
+    int potValue = analogRead(POT_PIN);
+    int brightness = map(potValue, 0, 1023, 0, 255);
+    FastLED.setBrightness(brightness);
 }
