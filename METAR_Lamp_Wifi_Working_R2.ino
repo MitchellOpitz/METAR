@@ -40,53 +40,28 @@ int status = WL_IDLE_STATUS;
 #define DEBUG false  // MO - Add debug mode
 boolean ledStatus = true; // used so leds only indicate connection status on first boot, or after failure
 
-
 void setup() {
-
-    
-  Serial.begin(115200);
+    Serial.begin(115200);
     EEPROM.begin(512);
 
-configureWiFiManager();
-connectToWifi();
-
- WiFiManagerParameter custom_text_box("ICAO", "Enter Your Aiport Here", "", 4);
- wifiManager.addParameter(&custom_text_box);
-
-   
- //wifi setup
-  WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
-    // it is a good practice to make sure your code sets wifi mode how you want it.
-
-    
-    
-  pinMode(TRIGGER_PIN, INPUT_PULLUP); //defining the pinmode for updating the wifi info
-  pinMode(LED_BUILTIN, OUTPUT); // give us control of the onboard LED
-  digitalWrite(LED_BUILTIN, LOW);
-
-initializeLeds();
-  fill_solid(leds, NUM_AIRPORTS, CRGB::Orange); // indicate status with LEDs, but only on first run or error
-    FastLED.show();
-}
- 
- 
-String data;
-
-data = custom_text_box.getValue();  //pulls the airport data down
-if (data != ""){
-
-writeStringToEEPROM(10, data);
-
+    configureWiFi();
+    setupWiFiManager();
+    setupCustomParameter();
+    initializePins();
+    initializeLeds();
+    indicateWifiStatus();
 }
 
-
-
-
-Serial.print("Airport name");
-Serial.println(airports);
-
+void loop() {
+    connectToWifi();
+    readAirportData();
+    retrieveMetarData();
+    parseMetarData();
+    doColor();
+    handleDelay();
 }
 
+/*
 void loop() {
   digitalWrite(LED_BUILTIN, LOW); // on if we're awake
 
@@ -143,8 +118,15 @@ airports = readStringFromEEPROM(10);
     delay(LOOP_INTERVAL); // pause during the interval
   }
 }
+ */
 
-bool getMetars(){
+ void readAirportData() {
+    airports = readStringFromEEPROM(10);
+    Serial.print("Airport: ");
+    Serial.println(airports);
+}
+
+bool retrieveMetarData(){
   fill_solid(leds, NUM_AIRPORTS, CRGB::Black); // Set everything to black just in case there is no report
   uint32_t t;
   char c;
@@ -393,4 +375,31 @@ void parseMetarData(String data) {
             }
         }
     }
+}
+
+void configureWiFi() {
+    WiFi.mode(WIFI_STA);
+}
+
+void setupWiFiManager() {
+    WiFiManagerParameter custom_text_box("ICAO", "Enter Your Airport Here", "", 4);
+    wifiManager.addParameter(&custom_text_box);
+}
+
+void setupCustomParameter() {
+    String data = custom_text_box.getValue();
+    if (data != "") {
+        writeStringToEEPROM(10, data);
+    }
+}
+
+void initializePins() {
+    pinMode(TRIGGER_PIN, INPUT_PULLUP);
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, LOW);
+}
+
+void indicateWifiStatus() {
+    fill_solid(leds, NUM_AIRPORTS, CRGB::Orange);
+    FastLED.show();
 }
