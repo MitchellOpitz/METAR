@@ -207,27 +207,33 @@ parseMetarData();  // Need data string.
 }
 
 void doColor(String identifier, unsigned short int led, int wind, int gusts, String condition, String wxstring) {
-  CRGB color;
-  Serial.print(identifier);
-  Serial.print(": ");
-  Serial.print(condition);
-  Serial.print(" ");
-  Serial.print(wind);
-  Serial.print("G");
-  Serial.print(gusts);
-  Serial.print("kts LED ");
-  Serial.print(led);
-  Serial.print(" WX: ");
-  Serial.println(wxstring);
-  
-  if (condition == "LIFR" || identifier == "LIFR") color = CRGB::Magenta;
-  else if (condition == "IFR") color = CRGB::Red;
-  else if (condition == "MVFR") color = CRGB::Blue;
-  else if (condition == "VFR") color = CRGB::Green;
-    
-  else color = CRGB::Black;
+    CRGB color;
 
-  leds[led] = color;
+    if (condition == "LIFR" || identifier == "LIFR") {
+        color = CRGB::Magenta;
+    } else if (condition == "IFR") {
+        color = CRGB::Red;
+    } else if (condition == "MVFR") {
+        color = CRGB::Blue;
+    } else if (condition == "VFR") {
+        color = CRGB::Green;
+    } else {
+        color = CRGB::Black;
+    }
+
+    Serial.print(identifier);
+    Serial.print(": ");
+    Serial.print(condition);
+    Serial.print(" ");
+    Serial.print(wind);
+    Serial.print("G");
+    Serial.print(gusts);
+    Serial.print("kts LED ");
+    Serial.print(led);
+    Serial.print(" WX: ");
+    Serial.println(wxstring);
+
+    leds[led] = color;
 }
 
 void writeStringToEEPROM(char add, String data) {
