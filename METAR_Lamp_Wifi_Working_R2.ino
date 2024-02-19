@@ -20,6 +20,7 @@ using namespace std;
 #define SERVER "aviationweather.gov"
 #define BASE_URI "/cgi-bin/data/dataserver.php?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=constraint&stationString="
 #define POT_PIN A0
+#define REPROGRAM_BUTTON_PIN D3
 
 // Step 3: Initialize variables
 int timeout = 120;
@@ -58,13 +59,17 @@ void setup() {
 }
 
 void loop() {
-    connectToWifi();
-    readAirportData();
-    String metarData = retrieveMetarData(airports);
-    parseMetarData();
-    doColor();
-    handleDelay();
-    updateBrightness();
+    if (isReprogramButtonPressed()) {
+        enterReprogramMode();
+    } else {
+        connectToWifi();
+        readAirportData();
+        String metarData = retrieveMetarData(airports);
+        parseMetarData();
+        doColor();
+        handleDelay();
+        updateBrightness();
+    }
 }
 
 void doColor(String identifier, unsigned short int led, int wind, int gusts, String condition, String wxstring) {
@@ -106,6 +111,7 @@ void initializeLeds() {
 
 void initializePins() {
     pinMode(TRIGGER_PIN, INPUT_PULLUP);
+    pinMode(REPROGRAM_BUTTON_PIN, INPUT_PULLUP);
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
 }
@@ -317,4 +323,12 @@ void updateBrightness() {
     int potValue = analogRead(POT_PIN);
     int brightness = map(potValue, 0, 1023, 0, 255);
     FastLED.setBrightness(brightness);
+}
+
+bool isReprogramButtonPressed() {
+  return digitalRead(REPROGRAM_BUTTON_PIN) == LOW;
+}
+
+void enterReprogramMode() {
+    Serial.println("Reprogram mode activated.");
 }
