@@ -224,84 +224,57 @@ String retrieveMetarData(String airports) {
 }
 
 void parseMetarData(String data) {
-    String currentAirport;
-    String currentCondition;
-    int currentWind = 0;
-    int currentGusts = 0;
-    String currentWxstring;
+  // Define starting tags for each relevant field
+  const String TAG_STATION_ID = "<station_id>";
+  const String TAG_WIND_SPEED = "<wind_speed_kt>";
+  const String TAG_WIND_GUST = "<wind_gust_kt>";
+  const String TAG_FLIGHT_CATEGORY = "<flight_category>";
+  const String TAG_WX_STRING = "<wx_string>";
 
-    bool readingAirport = false;
-    bool readingWind = false;
-    bool readingGusts = false;
-    bool readingCondition = false;
-    bool readingWxstring = false;
+  // Initialize variables
+  String currentAirport;
+  int currentWind = 0;
+  int currentGusts = 0;
+  String currentCondition;
+  String currentWxstring;
 
-    for (int i = 0; i < data.length(); i++) {
-        char c = data.charAt(i);
+  // Iterate through each line in the data
+  for (int i = 0; i < data.length(); i++) {
+    if (data.charAt(i) == '\n') { // Check for line break
+      // Process the collected data for the current airport
+      processLine(currentAirport, currentCondition, currentWind, currentGusts, currentWxstring);
 
-        if (c == '\n') {
-            processLine(currentAirport, currentCondition, currentWind, currentGusts, currentWxstring);
-            resetValues(currentAirport, currentWind, currentGusts, currentCondition, currentWxstring);
-            continue;
-        }
-
-        updateCurrentField(c, data, i, currentAirport, currentWind, currentGusts, currentCondition, currentWxstring, 
-                            readingAirport, readingWind, readingGusts, readingCondition, readingWxstring);
+      // Reset variables for the next airport
+      currentAirport = "";
+      currentWind = 0;
+      currentGusts = 0;
+      currentCondition = "";
+      currentWxstring = "";
+      continue;
     }
 
-    // Process the last airport data
-    processLine(currentAirport, currentCondition, currentWind, currentGusts, currentWxstring);
-}
+    // Check for starting tags and extract corresponding values
+    int tagEnd = data.indexOf('>', i);
+    if (tagEnd > -1) {
+      String tag = data.substring(i, tagEnd + 1);
+      i = tagEnd + 1; // Move index to after closing tag
 
-void updateCurrentField(char c, String data, int& i, String& currentAirport, int& currentWind, int& currentGusts,
-                        String& currentCondition, String& currentWxstring, bool& readingAirport, bool& readingWind,
-                        bool& readingGusts, bool& readingCondition, bool& readingWxstring) {
-    static String currentLine;
-    currentLine += c;
-
-    if (currentLine.endsWith("<station_id>")) {
-        readingAirport = true;
-        currentLine = "";
-    } else if (readingAirport) {
-        updateField(currentLine, "<station_id>", currentAirport, readingAirport);
-    } else if (currentLine.endsWith("<wind_speed_kt>")) {
-        readingWind = true;
-        currentLine = "";
-    } else if (readingWind) {
-        updateField(currentLine, "<wind_speed_kt>", currentWind, readingWind);
-    } else if (currentLine.endsWith("<wind_gust_kt>")) {
-        readingGusts = true;
-        currentLine = "";
-    } else if (readingGusts) {
-        updateField(currentLine, "<wind_gust_kt>", currentGusts, readingGusts);
-    } else if (currentLine.endsWith("<flight_category>")) {
-        readingCondition = true;
-        currentLine = "";
-    } else if (readingCondition) {
-        updateField(currentLine, "<flight_category>", currentCondition, readingCondition);
-    } else if (currentLine.endsWith("<wx_string>")) {
-        readingWxstring = true;
-        currentLine = "";
-    } else if (readingWxstring) {
-        updateField(currentLine, "<wx_string>", currentWxstring, readingWxstring);
+      if (tag == TAG_STATION_ID) {
+        currentAirport = data.substring(i, data.indexOf('<', i));
+      } else if (tag == TAG_WIND_SPEED) {
+        currentWind = data.substring(i, data.indexOf('<', i)).toInt();
+      } else if (tag == TAG_WIND_GUST) {
+        currentGusts = data.substring(i, data.indexOf('<', i)).toInt();
+      } else if (tag == TAG_FLIGHT_CATEGORY) {
+        currentCondition = data.substring(i, data.indexOf('<', i));
+      } else if (tag == TAG_WX_STRING) {
+        currentWxstring = data.substring(i, data.indexOf('<', i));
+      }
     }
-}
+  }
 
-template<typename T>
-void updateField(String& currentLine, const String& delimiter, T& field, bool& readingField) {
-    if (!currentLine.endsWith("<")) {
-        field = currentLine.toInt();
-    } else {
-        readingField = false;
-    }
-}
-
-void resetValues(String& currentAirport, int& currentWind, int& currentGusts, String& currentCondition, String& currentWxstring) {
-    currentAirport = "";
-    currentWind = 0;
-    currentGusts = 0;
-    currentCondition = "";
-    currentWxstring = "";
+  // Process the last airport data
+  processLine(currentAirport, currentCondition, currentWind, currentGusts, currentWxstring);
 }
 
 void processLine(String currentAirport, String currentCondition, int currentWind, int currentGusts, String currentWxstring) {
