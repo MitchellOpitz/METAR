@@ -49,10 +49,7 @@ void setup() {
     Serial.begin(115200);
     EEPROM.begin(512);
 
-    configureWiFi();
-    configureWiFiManager();
-    setupWiFiManager();
-    setupCustomParameter();
+    setupWifi();    
     initializePins();
     initializeLeds();
     indicateWifiStatus();
@@ -70,6 +67,25 @@ void loop() {
         updateBrightness();
         delay(LOOP_INTERVAL);
     }
+}
+
+void setupWiFi() {
+  // Configure WiFi mode
+  WiFi.mode(WIFI_STA);
+
+  // Configure WiFi manager
+  wifiManager.setDebugOutput(false);
+  wifiManager.resetSettings();
+
+  // Setup WiFi connection parameters
+  WiFiManagerParameter custom_text_box("ICAO", "Enter Your Airport Here", "", 4);
+  wifiManager.addParameter(&custom_text_box);
+
+  // Save custom parameter if entered
+  String data = custom_text_box.getValue();
+  if (data != "") {
+    writeStringToEEPROM(10, data);
+  }
 }
 
 void doColor(String identifier, unsigned short int led, int wind, int gusts, String condition, String wxstring) {
@@ -124,27 +140,6 @@ void connectToWifi() {
         Serial.println("Failed to connect to WiFi or hit timeout.");
     } else {
         Serial.println("Connected to WiFi.");
-    }
-}
-
-void configureWiFiManager() {
-    wifiManager.setDebugOutput(false);
-    wifiManager.resetSettings();
-}
-
-void configureWiFi() {
-    WiFi.mode(WIFI_STA);
-}
-
-void setupWiFiManager() {
-    WiFiManagerParameter custom_text_box("ICAO", "Enter Your Airport Here", "", 4);
-    wifiManager.addParameter(&custom_text_box);
-}
-
-void setupCustomParameter() {
-    String data = custom_text_box.getValue();
-    if (data != "") {
-        writeStringToEEPROM(10, data);
     }
 }
 
