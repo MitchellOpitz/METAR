@@ -49,10 +49,7 @@ void setup() {
     Serial.begin(115200);
     EEPROM.begin(512);
 
-    configureWiFi();
-    configureWiFiManager();
-    setupWiFiManager();
-    setupCustomParameter();
+    setupWifi();    
     initializePins();
     initializeLeds();
     indicateWifiStatus();
@@ -65,41 +62,29 @@ void loop() {
         connectToWifi();
         readAirportData();
         String metarData = retrieveMetarData(airports);
-        parseMetarData();
-        doColor();
-        handleDelay();
+        parseMetarData(metarData);
         updateBrightness();
+        delay(LOOP_INTERVAL);
     }
 }
 
-void doColor(String identifier, unsigned short int led, int wind, int gusts, String condition, String wxstring) {
-    CRGB color;
+void setupWiFi() {
+  // Configure WiFi mode
+  WiFi.mode(WIFI_STA);
 
-    if (condition == "LIFR" || identifier == "LIFR") {
-        color = CRGB::Magenta;
-    } else if (condition == "IFR") {
-        color = CRGB::Red;
-    } else if (condition == "MVFR") {
-        color = CRGB::Blue;
-    } else if (condition == "VFR") {
-        color = CRGB::Green;
-    } else {
-        color = CRGB::Black;
-    }
+  // Configure WiFi manager
+  wifiManager.setDebugOutput(false);
+  wifiManager.resetSettings();
 
-    Serial.print(identifier);
-    Serial.print(": ");
-    Serial.print(condition);
-    Serial.print(" ");
-    Serial.print(wind);
-    Serial.print("G");
-    Serial.print(gusts);
-    Serial.print("kts LED ");
-    Serial.print(led);
-    Serial.print(" WX: ");
-    Serial.println(wxstring);
+  // Setup WiFi connection parameters
+  WiFiManagerParameter custom_text_box("ICAO", "Enter Your Airport Here", "", 4);
+  wifiManager.addParameter(&custom_text_box);
 
-    leds[led] = color;
+  // Save custom parameter if entered
+  String data = custom_text_box.getValue();
+  if (data != "") {
+    writeStringToEEPROM(10, data);
+  }
 }
 
 void initializeLeds() {
@@ -124,27 +109,6 @@ void connectToWifi() {
         Serial.println("Failed to connect to WiFi or hit timeout.");
     } else {
         Serial.println("Connected to WiFi.");
-    }
-}
-
-void configureWiFiManager() {
-    wifiManager.setDebugOutput(false);
-    wifiManager.resetSettings();
-}
-
-void configureWiFi() {
-    WiFi.mode(WIFI_STA);
-}
-
-void setupWiFiManager() {
-    WiFiManagerParameter custom_text_box("ICAO", "Enter Your Airport Here", "", 4);
-    wifiManager.addParameter(&custom_text_box);
-}
-
-void setupCustomParameter() {
-    String data = custom_text_box.getValue();
-    if (data != "") {
-        writeStringToEEPROM(10, data);
     }
 }
 
@@ -190,133 +154,130 @@ String readStringFromEEPROM(char add) {
 }
 
 String retrieveMetarData(String airports) {
+    // Establish a secure HTTPS connection to the server
     BearSSL::WiFiClientSecure client;
-    client.setInsecure();
+    client.setInsecure(); // For development/testing only; use proper certificates in production
 
     if (!client.connect(SERVER, 443)) {
         Serial.println("Connection failed!");
-        client.stop();
-        return ""; // Return an empty string indicating failure
+        return ""; // Indicate failure
     }
 
-    // Construct and send HTTP request
-    String request = "GET " + String(BASE_URI) + airports + " HTTP/1.1\r\n" +
-                     "Host: " + String(SERVER) + "\r\n" +
-                     "User-Agent: LED Sectional Client\r\n" +
-                     "Connection: close\r\n\r\n";
+    // Construct the HTTP request header with appropriate formatting
+    String request = "GET " + BASE_URI + airports + " HTTP/1.1\r\n"
+                    "Host: " + SERVER + "\r\n"
+                    "User-Agent: LED Sectional Client\r\n"
+                    "Connection: close\r\n\r\n";
+
+    // Send the HTTP request
     client.print(request);
 
-    // Wait for response
+    // Set a reasonable timeout to prevent indefinite waiting
     unsigned long timeout = millis();
-    while (!client.available()) {
-        if (millis() - timeout > 5000) {
-            Serial.println("Timeout waiting for response");
-            client.stop();
-            return ""; // Return an empty string indicating timeout
-        }
-    }
+    const unsigned long maxTimeout = 5000; // 5 seconds
 
-    // Read and process response
+    // Receive and process the response
     String responseData = "";
     while (client.available()) {
-        // Read response data
-        String line = client.readStringUntil('\r');
-        responseData += line; // Append each line to the response data
+        if (millis() - timeout > maxTimeout) {
+            Serial.println("Timeout waiting for response");
+            break; // Exit the loop on timeout
+        }
+
+        responseData += client.readStringUntil('\r'); // Read and append response lines
     }
 
     client.stop();
-    return responseData; // Return the received data
+
+    return responseData; // Return the received data, even if empty due to errors
 }
 
 void parseMetarData(String data) {
-    String currentAirport;
-    String currentCondition;
-    int currentWind = 0;
-    int currentGusts = 0;
-    String currentWxstring;
+  // Define starting tags for each relevant field
+  const String TAG_STATION_ID = "<station_id>";
+  const String TAG_WIND_SPEED = "<wind_speed_kt>";
+  const String TAG_WIND_GUST = "<wind_gust_kt>";
+  const String TAG_FLIGHT_CATEGORY = "<flight_category>";
+  const String TAG_WX_STRING = "<wx_string>";
 
-    bool readingAirport = false;
-    bool readingWind = false;
-    bool readingGusts = false;
-    bool readingCondition = false;
-    bool readingWxstring = false;
+  // Initialize variables
+  String currentAirport;
+  int currentWind = 0;
+  int currentGusts = 0;
+  String currentCondition;
+  String currentWxstring;
 
-    for (int i = 0; i < data.length(); i++) {
-        char c = data.charAt(i);
+  // Iterate through each line in the data
+  for (int i = 0; i < data.length(); i++) {
+    if (data.charAt(i) == '\n') { // Check for line break
+      // Process the collected data for the current airport
+      processLine(currentAirport, currentCondition, currentWind, currentGusts, currentWxstring);
 
-        if (c == '\n') {
-            processLine(currentAirport, currentCondition, currentWind, currentGusts, currentWxstring);
-            resetValues(currentAirport, currentWind, currentGusts, currentCondition, currentWxstring);
-            continue;
-        }
-
-        updateCurrentField(c, data, i, currentAirport, currentWind, currentGusts, currentCondition, currentWxstring, 
-                            readingAirport, readingWind, readingGusts, readingCondition, readingWxstring);
+      // Reset variables for the next airport
+      currentAirport = "";
+      currentWind = 0;
+      currentGusts = 0;
+      currentCondition = "";
+      currentWxstring = "";
+      continue;
     }
 
-    // Process the last airport data
-    processLine(currentAirport, currentCondition, currentWind, currentGusts, currentWxstring);
-}
+    // Check for starting tags and extract corresponding values
+    int tagEnd = data.indexOf('>', i);
+    if (tagEnd > -1) {
+      String tag = data.substring(i, tagEnd + 1);
+      i = tagEnd + 1; // Move index to after closing tag
 
-void updateCurrentField(char c, String data, int& i, String& currentAirport, int& currentWind, int& currentGusts,
-                        String& currentCondition, String& currentWxstring, bool& readingAirport, bool& readingWind,
-                        bool& readingGusts, bool& readingCondition, bool& readingWxstring) {
-    static String currentLine;
-    currentLine += c;
-
-    if (currentLine.endsWith("<station_id>")) {
-        readingAirport = true;
-        currentLine = "";
-    } else if (readingAirport) {
-        updateField(currentLine, "<station_id>", currentAirport, readingAirport);
-    } else if (currentLine.endsWith("<wind_speed_kt>")) {
-        readingWind = true;
-        currentLine = "";
-    } else if (readingWind) {
-        updateField(currentLine, "<wind_speed_kt>", currentWind, readingWind);
-    } else if (currentLine.endsWith("<wind_gust_kt>")) {
-        readingGusts = true;
-        currentLine = "";
-    } else if (readingGusts) {
-        updateField(currentLine, "<wind_gust_kt>", currentGusts, readingGusts);
-    } else if (currentLine.endsWith("<flight_category>")) {
-        readingCondition = true;
-        currentLine = "";
-    } else if (readingCondition) {
-        updateField(currentLine, "<flight_category>", currentCondition, readingCondition);
-    } else if (currentLine.endsWith("<wx_string>")) {
-        readingWxstring = true;
-        currentLine = "";
-    } else if (readingWxstring) {
-        updateField(currentLine, "<wx_string>", currentWxstring, readingWxstring);
+      if (tag == TAG_STATION_ID) {
+        currentAirport = data.substring(i, data.indexOf('<', i));
+      } else if (tag == TAG_WIND_SPEED) {
+        currentWind = data.substring(i, data.indexOf('<', i)).toInt();
+      } else if (tag == TAG_WIND_GUST) {
+        currentGusts = data.substring(i, data.indexOf('<', i)).toInt();
+      } else if (tag == TAG_FLIGHT_CATEGORY) {
+        currentCondition = data.substring(i, data.indexOf('<', i));
+      } else if (tag == TAG_WX_STRING) {
+        currentWxstring = data.substring(i, data.indexOf('<', i));
+      }
     }
-}
+  }
 
-template<typename T>
-void updateField(String& currentLine, const String& delimiter, T& field, bool& readingField) {
-    if (!currentLine.endsWith("<")) {
-        field = currentLine.toInt();
-    } else {
-        readingField = false;
-    }
-}
-
-void resetValues(String& currentAirport, int& currentWind, int& currentGusts, String& currentCondition, String& currentWxstring) {
-    currentAirport = "";
-    currentWind = 0;
-    currentGusts = 0;
-    currentCondition = "";
-    currentWxstring = "";
+  // Process the last airport data
+  processLine(currentAirport, currentCondition, currentWind, currentGusts, currentWxstring);
 }
 
 void processLine(String currentAirport, String currentCondition, int currentWind, int currentGusts, String currentWxstring) {
     if (!currentAirport.isEmpty()) {
         for (unsigned short int i = 0; i < NUM_AIRPORTS; i++) {
             if (airports == currentAirport) {
-                doColor(currentAirport, i, currentWind, currentGusts, currentCondition, currentWxstring);
+                setColor(currentCondition, i);
             }
         }
     }
+}
+
+void setColor(String condition, unsigned short int led) {
+  CRGB color;
+
+  switch (condition) {
+    case "LIFR":
+      color = CRGB::Magenta;
+      break;
+    case "IFR":
+      color = CRGB::Red;
+      break;
+    case "MVFR":
+      color = CRGB::Blue;
+      break;
+    case "VFR":
+      color = CRGB::Green;
+      break;
+    default:
+      color = CRGB::Black;
+      break;
+  }
+
+  leds[led] = color;
 }
 
 void updateBrightness() {
