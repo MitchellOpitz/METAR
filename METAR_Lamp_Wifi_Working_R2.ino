@@ -14,9 +14,6 @@ using namespace std;
 #define DATA_PIN    D2
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
-#define READ_TIMEOUT 15 // Cancel query if no data received (seconds)
-#define WIFI_TIMEOUT 60 // in seconds
-#define RETRY_TIMEOUT 15000 // in ms
 #define SERVER "aviationweather.gov"
 #define BASE_URI "/cgi-bin/data/dataserver.php?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=constraint&stationString="
 #define POT_PIN A0
@@ -25,25 +22,14 @@ using namespace std;
 // Step 3: Initialize variables
 int timeout = 120;
 String airports = "";
-String airportString = "";
 WiFiManager wifiManager;
 CRGB leds[NUM_AIRPORTS];
 String data;
-unsigned int loops = -1;
-int status = WL_IDLE_STATUS;
 
 // Possibly unused
-#define FASTLED_ESP8266_RAW_PIN_ORDER
-#define USE_LIGHT_SENSOR false
-#define LIGHT_SENSOR_TSL2561 false
 #define BRIGHT_PIN A0
 
 /* ----------------------------------------------------------------------- */
-
- 
-#define DEBUG false  // MO - Add debug mode
-boolean ledStatus = true; // used so leds only indicate connection status on first boot, or after failure
-
 
 void setup() {
     Serial.begin(115200);
