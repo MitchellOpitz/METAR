@@ -154,42 +154,42 @@ String readStringFromEEPROM(char add) {
 }
 
 String retrieveMetarData(String airports) {
+    // Establish a secure HTTPS connection to the server
     BearSSL::WiFiClientSecure client;
-    client.setInsecure();
+    client.setInsecure(); // For development/testing only; use proper certificates in production
 
     if (!client.connect(SERVER, 443)) {
         Serial.println("Connection failed!");
-        client.stop();
-        return ""; // Return an empty string indicating failure
+        return ""; // Indicate failure
     }
 
-    // Construct and send HTTP request
-    String request = "GET " + String(BASE_URI) + airports + " HTTP/1.1\r\n" +
-                     "Host: " + String(SERVER) + "\r\n" +
-                     "User-Agent: LED Sectional Client\r\n" +
-                     "Connection: close\r\n\r\n";
+    // Construct the HTTP request header with appropriate formatting
+    String request = "GET " + BASE_URI + airports + " HTTP/1.1\r\n"
+                    "Host: " + SERVER + "\r\n"
+                    "User-Agent: LED Sectional Client\r\n"
+                    "Connection: close\r\n\r\n";
+
+    // Send the HTTP request
     client.print(request);
 
-    // Wait for response
+    // Set a reasonable timeout to prevent indefinite waiting
     unsigned long timeout = millis();
-    while (!client.available()) {
-        if (millis() - timeout > 5000) {
-            Serial.println("Timeout waiting for response");
-            client.stop();
-            return ""; // Return an empty string indicating timeout
-        }
-    }
+    const unsigned long maxTimeout = 5000; // 5 seconds
 
-    // Read and process response
+    // Receive and process the response
     String responseData = "";
     while (client.available()) {
-        // Read response data
-        String line = client.readStringUntil('\r');
-        responseData += line; // Append each line to the response data
+        if (millis() - timeout > maxTimeout) {
+            Serial.println("Timeout waiting for response");
+            break; // Exit the loop on timeout
+        }
+
+        responseData += client.readStringUntil('\r'); // Read and append response lines
     }
 
     client.stop();
-    return responseData; // Return the received data
+
+    return responseData; // Return the received data, even if empty due to errors
 }
 
 void parseMetarData(String data) {
