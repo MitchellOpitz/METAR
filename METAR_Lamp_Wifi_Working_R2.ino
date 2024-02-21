@@ -63,7 +63,6 @@ void loop() {
         readAirportData();
         String metarData = retrieveMetarData(airports);
         parseMetarData(metarData);
-        doColor();
         updateBrightness();
         delay(LOOP_INTERVAL);
     }
@@ -86,36 +85,6 @@ void setupWiFi() {
   if (data != "") {
     writeStringToEEPROM(10, data);
   }
-}
-
-void doColor(String identifier, unsigned short int led, int wind, int gusts, String condition, String wxstring) {
-    CRGB color;
-
-    if (condition == "LIFR" || identifier == "LIFR") {
-        color = CRGB::Magenta;
-    } else if (condition == "IFR") {
-        color = CRGB::Red;
-    } else if (condition == "MVFR") {
-        color = CRGB::Blue;
-    } else if (condition == "VFR") {
-        color = CRGB::Green;
-    } else {
-        color = CRGB::Black;
-    }
-
-    Serial.print(identifier);
-    Serial.print(": ");
-    Serial.print(condition);
-    Serial.print(" ");
-    Serial.print(wind);
-    Serial.print("G");
-    Serial.print(gusts);
-    Serial.print("kts LED ");
-    Serial.print(led);
-    Serial.print(" WX: ");
-    Serial.println(wxstring);
-
-    leds[led] = color;
 }
 
 void initializeLeds() {
@@ -281,10 +250,34 @@ void processLine(String currentAirport, String currentCondition, int currentWind
     if (!currentAirport.isEmpty()) {
         for (unsigned short int i = 0; i < NUM_AIRPORTS; i++) {
             if (airports == currentAirport) {
-                doColor(currentAirport, i, currentWind, currentGusts, currentCondition, currentWxstring);
+                setColor(currentCondition, i);
             }
         }
     }
+}
+
+void setColor(String condition, unsigned short int led) {
+  CRGB color;
+
+  switch (condition) {
+    case "LIFR":
+      color = CRGB::Magenta;
+      break;
+    case "IFR":
+      color = CRGB::Red;
+      break;
+    case "MVFR":
+      color = CRGB::Blue;
+      break;
+    case "VFR":
+      color = CRGB::Green;
+      break;
+    default:
+      color = CRGB::Black;
+      break;
+  }
+
+  leds[led] = color;
 }
 
 void updateBrightness() {
