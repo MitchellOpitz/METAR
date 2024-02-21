@@ -65,10 +65,10 @@ void loop() {
         connectToWifi();
         readAirportData();
         String metarData = retrieveMetarData(airports);
-        parseMetarData();
+        parseMetarData(metarData);
         doColor();
-        handleDelay();
         updateBrightness();
+        delay(LOOP_INTERVAL);
     }
 }
 
