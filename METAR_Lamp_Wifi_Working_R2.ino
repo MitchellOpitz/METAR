@@ -54,59 +54,38 @@ void loop() {
     }
 }
 
-void setupWiFi() {
-  Serial.println("Setting up WiFi...");
-  
+void setupWiFi() {  
   // Configure WiFi mode
   WiFi.mode(WIFI_STA);
 
   // Configure WiFi manager
-  Serial.println("Configuring WiFi manager...");
   wifiManager.setDebugOutput(false);
   wifiManager.resetSettings();
 
   // Setup WiFi connection parameters
-  Serial.println("Setting up WiFi connection parameters...");
   WiFiManagerParameter custom_text_box("ICAO", "Enter Your Airport Here", "", 4);
   wifiManager.addParameter(&custom_text_box);
 
   // Save custom parameter if entered
   String data = custom_text_box.getValue();
   if (data != "") {
-    Serial.println("Custom data entered: " + data);
     writeStringToEEPROM(10, data);
-  } else {
-    Serial.println("No custom data entered.");
   }
 }
 
-void initializeLeds() {
-    Serial.println("Initializing LEDs...");
-    
+void initializeLeds() {    
     int BRIGHTNESS = analogRead(BRIGHT_PIN);
-    BRIGHTNESS = BRIGHTNESS / 4.5; 
+    BRIGHTNESS = BRIGHTNESS / 4.5;
     BRIGHTNESS = 5;
-    Serial.println("Brightness read from pin: " + String(BRIGHTNESS));
-    
     FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_AIRPORTS).setCorrection(TypicalLEDStrip);
-    Serial.println("LED strip initialized with correction.");
-    
     FastLED.setBrightness(BRIGHTNESS);
-    Serial.println("Brightness set to: " + String(BRIGHTNESS));
 }
 
-void initializePins() {
-    Serial.println("Initializing pins...");
-    
-    pinMode(TRIGGER_PIN, INPUT_PULLUP);
-    Serial.println("Trigger pin set as INPUT_PULLUP.");
-    
-    pinMode(REPROGRAM_BUTTON_PIN, INPUT_PULLUP);
-    Serial.println("Reprogram button pin set as INPUT_PULLUP.");
-    
+void initializePins() {    
+    pinMode(TRIGGER_PIN, INPUT_PULLUP);    
+    pinMode(REPROGRAM_BUTTON_PIN, INPUT_PULLUP);    
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
-    Serial.println("Built-in LED pin set as OUTPUT and turned off.");
 }
 
 
