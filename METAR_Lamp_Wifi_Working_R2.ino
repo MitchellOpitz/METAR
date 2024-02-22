@@ -11,7 +11,7 @@ using namespace std;
 #define NUM_AIRPORTS 25
 #define LOOP_INTERVAL 300000
 #define TRIGGER_PIN D4
-#define DATA_PIN    D2
+#define DATA_PIN D2
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
 #define SERVER "aviationweather.gov"
@@ -35,7 +35,7 @@ void setup() {
     Serial.begin(115200);
     EEPROM.begin(512);
 
-    setupWifi();    
+    setupWiFi();
     initializePins();
     initializeLeds();
     indicateWifiStatus();
@@ -55,42 +55,65 @@ void loop() {
 }
 
 void setupWiFi() {
+  Serial.println("Setting up WiFi...");
+  
   // Configure WiFi mode
   WiFi.mode(WIFI_STA);
 
   // Configure WiFi manager
+  Serial.println("Configuring WiFi manager...");
   wifiManager.setDebugOutput(false);
   wifiManager.resetSettings();
 
   // Setup WiFi connection parameters
+  Serial.println("Setting up WiFi connection parameters...");
   WiFiManagerParameter custom_text_box("ICAO", "Enter Your Airport Here", "", 4);
   wifiManager.addParameter(&custom_text_box);
 
   // Save custom parameter if entered
   String data = custom_text_box.getValue();
   if (data != "") {
+    Serial.println("Custom data entered: " + data);
     writeStringToEEPROM(10, data);
+  } else {
+    Serial.println("No custom data entered.");
   }
 }
 
 void initializeLeds() {
+    Serial.println("Initializing LEDs...");
+    
     int BRIGHTNESS = analogRead(BRIGHT_PIN);
     BRIGHTNESS = BRIGHTNESS / 4.5; 
+    BRIGHTNESS = 5;
+    Serial.println("Brightness read from pin: " + String(BRIGHTNESS));
+    
     FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_AIRPORTS).setCorrection(TypicalLEDStrip);
+    Serial.println("LED strip initialized with correction.");
+    
     FastLED.setBrightness(BRIGHTNESS);
+    Serial.println("Brightness set to: " + String(BRIGHTNESS));
 }
 
 void initializePins() {
+    Serial.println("Initializing pins...");
+    
     pinMode(TRIGGER_PIN, INPUT_PULLUP);
+    Serial.println("Trigger pin set as INPUT_PULLUP.");
+    
     pinMode(REPROGRAM_BUTTON_PIN, INPUT_PULLUP);
+    Serial.println("Reprogram button pin set as INPUT_PULLUP.");
+    
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
+    Serial.println("Built-in LED pin set as OUTPUT and turned off.");
 }
+
 
 // Section - Wifi Handling
 
 void connectToWifi() {
-    wifiManager.setConfigPortalBlocking(true);  // Disables WifI configuration portal.  May not be needed.
+    //wifiManager.setConfigPortalBlocking(true);  // Disables WifI configuration portal.  May not be needed.
     if (!wifiManager.autoConnect("MetarWiFi")) {
         Serial.println("Failed to connect to WiFi or hit timeout.");
     } else {
@@ -150,8 +173,8 @@ String retrieveMetarData(String airports) {
     }
 
     // Construct the HTTP request header with appropriate formatting
-    String request = "GET " + BASE_URI + airports + " HTTP/1.1\r\n"
-                    "Host: " + SERVER + "\r\n"
+    String request = "GET " + String(BASE_URI) + airports + " HTTP/1.1\r\n";
+                    "Host: " + String(SERVER) + "\r\n"
                     "User-Agent: LED Sectional Client\r\n"
                     "Connection: close\r\n\r\n";
 
@@ -245,22 +268,16 @@ void processLine(String currentAirport, String currentCondition, int currentWind
 void setColor(String condition, unsigned short int led) {
   CRGB color;
 
-  switch (condition) {
-    case "LIFR":
-      color = CRGB::Magenta;
-      break;
-    case "IFR":
-      color = CRGB::Red;
-      break;
-    case "MVFR":
-      color = CRGB::Blue;
-      break;
-    case "VFR":
-      color = CRGB::Green;
-      break;
-    default:
-      color = CRGB::Black;
-      break;
+  if (condition == "LIFR") {
+    color = CRGB::Magenta;
+  } else if (condition == "IFR") {
+    color = CRGB::Red;
+  } else if (condition == "MVFR") {
+    color = CRGB::Blue;
+  } else if (condition == "VFR") {
+    color = CRGB::Green;
+  } else {
+    color = CRGB::Black;
   }
 
   leds[led] = color;
