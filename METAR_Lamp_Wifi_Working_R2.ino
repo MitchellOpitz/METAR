@@ -14,7 +14,7 @@ using namespace std;
 #define DATA_PIN D2
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
-#define SERVER "aviationweather.gov"
+#define SERVER "www.aviationweather.gov"
 #define BASE_URI "/cgi-bin/data/dataserver.php?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=constraint&stationString="
 #define POT_PIN A0
 #define REPROGRAM_BUTTON_PIN D3
@@ -288,6 +288,7 @@ void updateBrightness() {
   Serial.println("Updating brightness...");
     int potValue = analogRead(POT_PIN);
     int brightness = map(potValue, 0, 1023, 0, 255);
+    brightness = 25;
     FastLED.setBrightness(brightness);
 }
 
