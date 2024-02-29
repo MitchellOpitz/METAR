@@ -70,6 +70,8 @@ void initializeLeds() {
     BRIGHTNESS = 5;
     FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_AIRPORTS).setCorrection(TypicalLEDStrip);
     FastLED.setBrightness(BRIGHTNESS);
+    fill_solid(leds, NUM_AIRPORTS, CRGB::Orange);
+    FastLED.show();
 }
 
 void configureWifi() {  
@@ -106,8 +108,12 @@ void connectToAccessPoint() {
   Serial.println("Checking connection to access point...");
     if (wifiManager.autoConnect("MetarAP")) {
         Serial.println("Connected to WiFi.");
+        fill_solid(leds, NUM_AIRPORTS, CRGB::Purple);
+        FastLED.show();
     } else {
         Serial.println("Failed to connect to WiFi or hit timeout.");
+        fill_solid(leds, NUM_AIRPORTS, CRGB::Orange);
+        FastLED.show();
     }
 }
 
