@@ -51,7 +51,7 @@ void loop() {
             parseMetarData(metarData);
             updateBrightness();
         }
-        delay(1000);
+        delay(LOOP_INTERVAL);
     }
 }
 
@@ -202,89 +202,72 @@ String retrieveMetarData(String airports) {
 }
 
 void parseMetarData(String data) {
-  Serial.println("Parsing Metar data...");
-  Serial.println(data);
-  // Define starting tags for each relevant field
-  const String TAG_STATION_ID = "<station_id>";
-  const String TAG_WIND_SPEED = "<wind_speed_kt>";
-  const String TAG_WIND_GUST = "<wind_gust_kt>";
-  const String TAG_FLIGHT_CATEGORY = "<flight_category>";
-  const String TAG_WX_STRING = "<wx_string>";
+    Serial.println("Parsing Metar data...");
+    // Define starting tags for each relevant field
+    const String TAG_METAR = "<METAR>";
+    const String TAG_FLIGHT_CATEGORY = "<flight_category>";
 
-  // Initialize variables
-  String currentAirport;
-  int currentWind = 0;
-  int currentGusts = 0;
-  String currentCondition;
-  String currentWxstring;
-
-  // Iterate through each line in the data
-  for (int i = 0; i < data.length(); i++) {
-    if (data.charAt(i) == '\n') { // Check for line break
-      // Process the collected data for the current airport
-      processLine(currentAirport, currentCondition, currentWind, currentGusts, currentWxstring);
-
-      // Reset variables for the next airport
-      currentAirport = "";
-      currentWind = 0;
-      currentGusts = 0;
-      currentCondition = "";
-      currentWxstring = "";
-      continue;
+    // Find the start of the first METAR entry
+    int startIndex = data.indexOf(TAG_METAR);
+    if (startIndex == -1) {
+        Serial.println("No METAR data found");
+        return;
     }
 
-    // Check for starting tags and extract corresponding values
-    int tagEnd = data.indexOf('>', i);
-    if (tagEnd > -1) {
-      String tag = data.substring(i, tagEnd + 1);
-      i = tagEnd + 1; // Move index to after closing tag
-
-      if (tag == TAG_STATION_ID) {
-        currentAirport = data.substring(i, data.indexOf('<', i));
-      } else if (tag == TAG_WIND_SPEED) {
-        currentWind = data.substring(i, data.indexOf('<', i)).toInt();
-      } else if (tag == TAG_WIND_GUST) {
-        currentGusts = data.substring(i, data.indexOf('<', i)).toInt();
-      } else if (tag == TAG_FLIGHT_CATEGORY) {
-        currentCondition = data.substring(i, data.indexOf('<', i));
-      } else if (tag == TAG_WX_STRING) {
-        currentWxstring = data.substring(i, data.indexOf('<', i));
-      }
+    // Find the end of the first METAR entry
+    int endIndex = data.indexOf("</METAR>", startIndex);
+    if (endIndex == -1) {
+        Serial.println("Invalid METAR data format");
+        return;
     }
-  }
 
-  // Process the last airport data
-  processLine(currentAirport, currentCondition, currentWind, currentGusts, currentWxstring);
-}
+    // Extract the METAR data for parsing
+    String metarData = data.substring(startIndex, endIndex);
 
-void processLine(String currentAirport, String currentCondition, int currentWind, int currentGusts, String currentWxstring) {
-    if (!currentAirport.isEmpty()) {
-        for (unsigned short int i = 0; i < NUM_AIRPORTS; i++) {
-            if (airports == currentAirport) {
-                setColor(currentCondition, i);
-            }
-        }
+    // Find the flight category tag
+    int categoryStart = metarData.indexOf(TAG_FLIGHT_CATEGORY);
+    if (categoryStart == -1) {
+        Serial.println("Flight category not found in METAR data");
+        return;
     }
+
+    // Find the end of the flight category tag
+    int categoryEnd = metarData.indexOf("</flight_category>", categoryStart);
+    if (categoryEnd == -1) {
+        Serial.println("Invalid flight category data format");
+        return;
+    }
+
+    // Extract the flight category value
+    String flightCategory = metarData.substring(categoryStart + TAG_FLIGHT_CATEGORY.length(), categoryEnd);
+
+    // Process the flight category and set color accordingly
+    setColor(flightCategory);
 }
 
-void setColor(String condition, unsigned short int led) {
-  Serial.print("Setting color...");
-  CRGB color;
+void setColor(String flightCategory) {
+    Serial.print("Setting color for flight category: ");
+    Serial.println(flightCategory);
 
-  if (condition == "LIFR") {
-    color = CRGB::Magenta;
-  } else if (condition == "IFR") {
-    color = CRGB::Red;
-  } else if (condition == "MVFR") {
-    color = CRGB::Blue;
-  } else if (condition == "VFR") {
-    color = CRGB::Green;
-  } else {
-    color = CRGB::Black;
-  }
+    CRGB color;
+    if (flightCategory.equals("VFR")) {
+        color = CRGB::Green;
+    } else if (flightCategory.equals("MVFR")) {
+        color = CRGB::Blue;
+    } else if (flightCategory.equals("IFR")) {
+        color = CRGB::Red;
+    } else if (flightCategory.equals("LIFR")) {
+        color = CRGB::Magenta;
+    } else {
+        // Unknown category, set to black or handle differently
+        color = CRGB::Black;
+    }
 
-  leds[led] = color;
+    // Set color for all LEDs
+    fill_solid(leds, NUM_AIRPORTS, color);
+    FastLED.show();
 }
+
 
 void updateBrightness() {
   Serial.println("Updating brightness...");
