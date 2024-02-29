@@ -44,12 +44,14 @@ void loop() {
     if (isReprogramButtonPressed()) {
         enterReprogramMode();
     } else {
-        connectToWifi();
+        connectToAccessPoint();
         readAirportData();
         String metarData = retrieveMetarData(airports);
-        parseMetarData(metarData);
-        updateBrightness();
-        delay(LOOP_INTERVAL);
+        if(!metarData.isEmpty()) {
+            parseMetarData(metarData);
+            updateBrightness();
+        }
+        delay(1000);
     }
 }
 
@@ -85,10 +87,10 @@ void configureWifi() {
   wifiManager.addParameter(&custom_text_box);
 
   // Connect to wifi config portal
-  if (!wifiManager.autoConnect("MetarWiFi")) {
-        Serial.println("Failed to connect to WiFi or hit timeout.");
+  if (wifiManager.autoConnect("MetarWiFi")) {
+        Serial.println("Successfully configured WiFi .");
     } else {
-        Serial.println("Connected to WiFi.");
+        Serial.println("Failed to configure WiFi or hit timeout.");
     }
     
     // Save custom parameter if entered
@@ -100,17 +102,13 @@ void configureWifi() {
 
 // Section - Wifi Handling
 
-void connectToWifi() {
-    if (!wifiManager.autoConnect("MetarWiFi")) {
-        Serial.println("Failed to connect to WiFi or hit timeout.");
-    } else {
+void connectToAccessPoint() {
+  Serial.println("Checking connection to access point...");
+    if (wifiManager.autoConnect("MetarAP")) {
         Serial.println("Connected to WiFi.");
+    } else {
+        Serial.println("Failed to connect to WiFi or hit timeout.");
     }
-}
-
-void indicateWifiStatus() {
-    fill_solid(leds, NUM_AIRPORTS, CRGB::Orange);
-    FastLED.show();
 }
 
 // Section - EEPROM
@@ -143,13 +141,15 @@ String readStringFromEEPROM(char add) {
 
 // Section - Data Handling
 
- void readAirportData() {
+void readAirportData() {
+  Serial.println("Reading airport data...");
     airports = readStringFromEEPROM(10);
-    Serial.print("Airport: ");
-    Serial.println(airports);
+    Serial.println("Airport: " + airports);
 }
 
 String retrieveMetarData(String airports) {
+    Serial.println("Retrieving Metar data...");
+    
     // Establish a secure HTTPS connection to the server
     BearSSL::WiFiClientSecure client;
     client.setInsecure(); // For development/testing only; use proper certificates in production
@@ -160,12 +160,13 @@ String retrieveMetarData(String airports) {
     }
 
     // Construct the HTTP request header with appropriate formatting
-    String request = "GET " + String(BASE_URI) + airports + " HTTP/1.1\r\n";
-                    "Host: " + String(SERVER) + "\r\n"
-                    "User-Agent: LED Sectional Client\r\n"
+    String request = "GET " + String(BASE_URI) + airports + " HTTP/1.1\r\n" +
+                    "Host: " + String(SERVER) + "\r\n" +
+                    "User-Agent: LED Sectional Client\r\n" +
                     "Connection: close\r\n\r\n";
 
     // Send the HTTP request
+    Serial.println("Sending request...");
     client.print(request);
 
     // Set a reasonable timeout to prevent indefinite waiting
@@ -174,21 +175,27 @@ String retrieveMetarData(String airports) {
 
     // Receive and process the response
     String responseData = "";
-    while (client.available()) {
+    while (client.connected() && !client.available()) {
         if (millis() - timeout > maxTimeout) {
             Serial.println("Timeout waiting for response");
-            break; // Exit the loop on timeout
+            client.stop();
+            return ""; // Indicate timeout
         }
+    }
 
-        responseData += client.readStringUntil('\r'); // Read and append response lines
+    // Read response data
+    while (client.available()) {
+        char c = client.read();
+        responseData += c;
     }
 
     client.stop();
-
-    return responseData; // Return the received data, even if empty due to errors
+    Serial.println("Response received!");
+    return responseData;
 }
 
 void parseMetarData(String data) {
+  Serial.println("Parsing Metar data...");
   // Define starting tags for each relevant field
   const String TAG_STATION_ID = "<station_id>";
   const String TAG_WIND_SPEED = "<wind_speed_kt>";
@@ -253,6 +260,7 @@ void processLine(String currentAirport, String currentCondition, int currentWind
 }
 
 void setColor(String condition, unsigned short int led) {
+  Serial.print("Setting color...");
   CRGB color;
 
   if (condition == "LIFR") {
@@ -271,6 +279,7 @@ void setColor(String condition, unsigned short int led) {
 }
 
 void updateBrightness() {
+  Serial.println("Updating brightness...");
     int potValue = analogRead(POT_PIN);
     int brightness = map(potValue, 0, 1023, 0, 255);
     FastLED.setBrightness(brightness);
