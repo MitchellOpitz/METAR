@@ -14,8 +14,8 @@ using namespace std;
 #define DATA_PIN D2
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
-#define SERVER "www.aviationweather.gov"
-#define BASE_URI "/cgi-bin/data/dataserver.php?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=constraint&stationString="
+#define SERVER "aviationweather.gov"
+#define BASE_URI "/api/data/dataserver.php?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=constraint&stationString="
 #define POT_PIN A0
 #define REPROGRAM_BUTTON_PIN D3
 
@@ -173,6 +173,7 @@ String retrieveMetarData(String airports) {
 
     // Send the HTTP request
     Serial.println("Sending request...");
+    Serial.println(request);
     client.print(request);
 
     // Set a reasonable timeout to prevent indefinite waiting
@@ -202,6 +203,7 @@ String retrieveMetarData(String airports) {
 
 void parseMetarData(String data) {
   Serial.println("Parsing Metar data...");
+  Serial.println(data);
   // Define starting tags for each relevant field
   const String TAG_STATION_ID = "<station_id>";
   const String TAG_WIND_SPEED = "<wind_speed_kt>";
