@@ -35,10 +35,9 @@ void setup() {
     Serial.begin(115200);
     EEPROM.begin(512);
 
-    setupWiFi();
     initializePins();
     initializeLeds();
-    indicateWifiStatus();
+    configureWifi();
 }
 
 void loop() {
@@ -54,7 +53,26 @@ void loop() {
     }
 }
 
-void setupWiFi() {  
+void initializePins() {    
+    Serial.println("Initializing pins...");
+    pinMode(TRIGGER_PIN, INPUT_PULLUP);    
+    pinMode(REPROGRAM_BUTTON_PIN, INPUT_PULLUP);    
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, LOW);
+}
+
+void initializeLeds() {    
+    Serial.println("Initializing LEDs...");
+    int BRIGHTNESS = analogRead(BRIGHT_PIN);
+    BRIGHTNESS = BRIGHTNESS / 4.5;
+    BRIGHTNESS = 5;
+    FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_AIRPORTS).setCorrection(TypicalLEDStrip);
+    FastLED.setBrightness(BRIGHTNESS);
+}
+
+void configureWifi() {  
+  Serial.println("Configuring wifi...");
+  
   // Configure WiFi mode
   WiFi.mode(WIFI_STA);
 
@@ -66,33 +84,23 @@ void setupWiFi() {
   WiFiManagerParameter custom_text_box("ICAO", "Enter Your Airport Here", "", 4);
   wifiManager.addParameter(&custom_text_box);
 
-  // Save custom parameter if entered
+  // Connect to wifi config portal
+  if (!wifiManager.autoConnect("MetarWiFi")) {
+        Serial.println("Failed to connect to WiFi or hit timeout.");
+    } else {
+        Serial.println("Connected to WiFi.");
+    }
+    
+    // Save custom parameter if entered
   String data = custom_text_box.getValue();
   if (data != "") {
     writeStringToEEPROM(10, data);
   }
 }
 
-void initializeLeds() {    
-    int BRIGHTNESS = analogRead(BRIGHT_PIN);
-    BRIGHTNESS = BRIGHTNESS / 4.5;
-    BRIGHTNESS = 5;
-    FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_AIRPORTS).setCorrection(TypicalLEDStrip);
-    FastLED.setBrightness(BRIGHTNESS);
-}
-
-void initializePins() {    
-    pinMode(TRIGGER_PIN, INPUT_PULLUP);    
-    pinMode(REPROGRAM_BUTTON_PIN, INPUT_PULLUP);    
-    pinMode(LED_BUILTIN, OUTPUT);
-    digitalWrite(LED_BUILTIN, LOW);
-}
-
-
 // Section - Wifi Handling
 
 void connectToWifi() {
-    //wifiManager.setConfigPortalBlocking(true);  // Disables WifI configuration portal.  May not be needed.
     if (!wifiManager.autoConnect("MetarWiFi")) {
         Serial.println("Failed to connect to WiFi or hit timeout.");
     } else {
