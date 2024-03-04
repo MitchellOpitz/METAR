@@ -6,6 +6,7 @@
 #include "Config.h"
 #include "Utilities.h"
 #include "MetarFunctions.h"
+#include "WifiFunctions.h"
 
 using namespace std;
 
@@ -41,46 +42,5 @@ void loop() {
             updateBrightness();
         }
         delay(LOOP_INTERVAL);
-    }
-}
-
-void configureWifi() {  
-  Serial.println("Configuring wifi...");
-  
-  // Configure WiFi mode
-  WiFi.mode(WIFI_STA);
-
-  // Configure WiFi manager
-  wifiManager.setDebugOutput(false);
-  wifiManager.resetSettings();
-
-  // Setup WiFi connection parameters
-  WiFiManagerParameter custom_text_box("ICAO", "Enter Your Airport Here", "", 4);
-  wifiManager.addParameter(&custom_text_box);
-
-  // Connect to wifi config portal
-  if (wifiManager.autoConnect("MetarWiFi")) {
-        Serial.println("Successfully configured WiFi .");
-    } else {
-        Serial.println("Failed to configure WiFi or hit timeout.");
-    }
-    
-    // Save custom parameter if entered
-  String data = custom_text_box.getValue();
-  if (data != "") {
-    writeStringToEEPROM(10, data);
-  }
-}
-
-// Section - Wifi Handling
-
-void connectToAccessPoint() {
-  Serial.println("Checking connection to access point...");
-    if (wifiManager.autoConnect("MetarAP")) {
-        Serial.println("Connected to WiFi.");
-        changeLEDColor(CRGB::Purple);
-    } else {
-        Serial.println("Failed to connect to WiFi or hit timeout.");
-        changeLEDColor(CRGB::Orange);
     }
 }
