@@ -4,26 +4,14 @@
 #include <vector>
 #include <EEPROM.h>
 #include <WiFiManager.h>
+#include "Config.h"
 
 using namespace std;
 
-// 2: Define constants
-#define NUM_AIRPORTS 25
-#define LOOP_INTERVAL 300000
-#define TRIGGER_PIN D4
-#define DATA_PIN D2
-#define LED_TYPE    WS2811
-#define COLOR_ORDER GRB
-#define SERVER "aviationweather.gov"
-#define BASE_URI "/api/data/dataserver.php?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=constraint&stationString="
-#define POT_PIN A0
-#define REPROGRAM_BUTTON_PIN D3
-
-// Step 3: Initialize variables
 int timeout = 120;
 String airports = "";
 WiFiManager wifiManager;
-CRGB leds[NUM_AIRPORTS];
+CRGB leds[NUM_LEDS];
 String data;
 
 // Possibly unused
@@ -68,9 +56,9 @@ void initializeLeds() {
     int BRIGHTNESS = analogRead(BRIGHT_PIN);
     BRIGHTNESS = BRIGHTNESS / 4.5;
     BRIGHTNESS = 5;
-    FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_AIRPORTS).setCorrection(TypicalLEDStrip);
+    FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
     FastLED.setBrightness(BRIGHTNESS);
-    fill_solid(leds, NUM_AIRPORTS, CRGB::Orange);
+    fill_solid(leds, NUM_LEDS, CRGB::Orange);
     FastLED.show();
 }
 
@@ -108,11 +96,11 @@ void connectToAccessPoint() {
   Serial.println("Checking connection to access point...");
     if (wifiManager.autoConnect("MetarAP")) {
         Serial.println("Connected to WiFi.");
-        fill_solid(leds, NUM_AIRPORTS, CRGB::Purple);
+        fill_solid(leds, NUM_LEDS, CRGB::Purple);
         FastLED.show();
     } else {
         Serial.println("Failed to connect to WiFi or hit timeout.");
-        fill_solid(leds, NUM_AIRPORTS, CRGB::Orange);
+        fill_solid(leds, NUM_LEDS, CRGB::Orange);
         FastLED.show();
     }
 }
@@ -264,7 +252,7 @@ void setColor(String flightCategory) {
     }
 
     // Set color for all LEDs
-    fill_solid(leds, NUM_AIRPORTS, color);
+    fill_solid(leds, NUM_LEDS, color);
     FastLED.show();
 }
 
