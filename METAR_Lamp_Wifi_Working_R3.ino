@@ -2,9 +2,9 @@
 #include <ESP8266WiFi.h>
 #include <FastLED.h>
 #include <vector>
-#include <EEPROM.h>
 #include <WiFiManager.h>
 #include "Config.h"
+#include "Utilities.h".
 
 using namespace std;
 
@@ -58,8 +58,7 @@ void initializeLeds() {
     BRIGHTNESS = 5;
     FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
     FastLED.setBrightness(BRIGHTNESS);
-    fill_solid(leds, NUM_LEDS, CRGB::Orange);
-    FastLED.show();
+    changeLEDColor(CRGB::Orange);
 }
 
 void configureWifi() {  
@@ -96,41 +95,11 @@ void connectToAccessPoint() {
   Serial.println("Checking connection to access point...");
     if (wifiManager.autoConnect("MetarAP")) {
         Serial.println("Connected to WiFi.");
-        fill_solid(leds, NUM_LEDS, CRGB::Purple);
-        FastLED.show();
+        changeLEDColor(CRGB::Purple);
     } else {
         Serial.println("Failed to connect to WiFi or hit timeout.");
-        fill_solid(leds, NUM_LEDS, CRGB::Orange);
-        FastLED.show();
+        changeLEDColor(CRGB::Orange);
     }
-}
-
-// Section - EEPROM
-
-void writeStringToEEPROM(char add, String data) {
-  int _size = data.length();
-  for (int i = 0; i < _size; i++) {
-    EEPROM.write(add + i, data[i]);
-  }
-  EEPROM.write(add + _size, '\0');
-  EEPROM.commit();
-}
-
-String readStringFromEEPROM(char add) {
-  const int maxLength = 100;
-  char data[maxLength + 1];
-  int len = 0;
-  char currentChar;
-
-  do {
-    currentChar = EEPROM.read(add + len);
-    data[len] = currentChar;
-    len++;
-  } while (currentChar != '\0' && len < maxLength);
-
-  data[len] = '\0';
-
-  return String(data);
 }
 
 // Section - Data Handling
@@ -230,13 +199,6 @@ void parseMetarData(String data) {
     String flightCategory = metarData.substring(categoryStart + TAG_FLIGHT_CATEGORY.length(), categoryEnd);
 
     // Process the flight category and set color accordingly
-    setColor(flightCategory);
-}
-
-void setColor(String flightCategory) {
-    Serial.print("Setting color for flight category: ");
-    Serial.println(flightCategory);
-
     CRGB color;
     if (flightCategory.equals("VFR")) {
         color = CRGB::Green;
@@ -251,11 +213,13 @@ void setColor(String flightCategory) {
         color = CRGB::Black;
     }
 
-    // Set color for all LEDs
+    changeLEDColor(color);
+}
+
+void changeLEDColor (CRGB color) {
     fill_solid(leds, NUM_LEDS, color);
     FastLED.show();
 }
-
 
 void updateBrightness() {
   Serial.println("Updating brightness...");
