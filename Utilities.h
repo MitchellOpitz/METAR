@@ -29,4 +29,12 @@ String readStringFromEEPROM(char add) {
     return String(data);
 }
 
+bool isReprogramButtonPressed() {
+  return digitalRead(REPROGRAM_BUTTON_PIN) == LOW;
+}
+
+void enterReprogramMode() {
+    Serial.println("Reprogram mode activated.");
+}
+
 #endif

@@ -228,11 +228,3 @@ void updateBrightness() {
     brightness = 25;
     FastLED.setBrightness(brightness);
 }
-
-bool isReprogramButtonPressed() {
-  return digitalRead(REPROGRAM_BUTTON_PIN) == LOW;
-}
-
-void enterReprogramMode() {
-    Serial.println("Reprogram mode activated.");
-}
