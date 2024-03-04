@@ -35,7 +35,6 @@ String readStringFromEEPROM(char add) {
 
 void initializePins() {    
     Serial.println("Initializing pins...");
-    pinMode(TRIGGER_PIN, INPUT_PULLUP);    
     pinMode(REPROGRAM_BUTTON_PIN, INPUT_PULLUP);    
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);

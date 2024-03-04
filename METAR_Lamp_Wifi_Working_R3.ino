@@ -1,4 +1,3 @@
-// 1: Organize includes
 #include <ESP8266WiFi.h>
 #include <FastLED.h>
 #include <vector>
@@ -8,9 +7,6 @@
 #include "Utilities.h"
 #include "MetarFunctions.h"
 #include "WifiFunctions.h"
-
-using namespace std;
-/* ----------------------------------------------------------------------- */
 
 void setup() {
     Serial.begin(115200);

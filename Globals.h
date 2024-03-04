@@ -1,7 +1,6 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-#include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <FastLED.h>
 #include <WiFiManager.h>
