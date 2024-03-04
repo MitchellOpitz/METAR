@@ -1,8 +1,15 @@
 #ifndef METAR_FUNCTIONS_H
 #define METAR_FUNCTIONS_H
 
+extern String airports;
 extern const char* SERVER;
 extern const char* BASE_URI;
+
+void readAirportData() {
+  Serial.println("Reading airport data...");
+    airports = readStringFromEEPROM(10);
+    Serial.println("Airport: " + airports);
+}
 
 String retrieveMetarData(String airports) {
     Serial.println("Retrieving Metar data...");

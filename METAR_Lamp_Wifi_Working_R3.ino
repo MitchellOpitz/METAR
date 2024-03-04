@@ -84,9 +84,3 @@ void connectToAccessPoint() {
         changeLEDColor(CRGB::Orange);
     }
 }
-
-void readAirportData() {
-  Serial.println("Reading airport data...");
-    airports = readStringFromEEPROM(10);
-    Serial.println("Airport: " + airports);
-}
