@@ -2,7 +2,6 @@
 #define CONFIG_H
 
 // Pin Definitions
-const int TRIGGER_PIN = D4;
 const int DATA_PIN = D2;
 const int REPROGRAM_BUTTON_PIN = D3;
 const int POT_PIN = A0;
