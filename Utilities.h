@@ -2,6 +2,7 @@
 #define UTILITIES_H
 
 #include <EEPROM.h>
+#include <FastLED.h>
 
 // Declare leds array as extern
 extern CRGB leds[];
@@ -32,12 +33,12 @@ String readStringFromEEPROM(char add) {
     return String(data);
 }
 
-bool isReprogramButtonPressed() {
-  return digitalRead(REPROGRAM_BUTTON_PIN) == LOW;
-}
-
-void enterReprogramMode() {
-    Serial.println("Reprogram mode activated.");
+void initializePins() {    
+    Serial.println("Initializing pins...");
+    pinMode(TRIGGER_PIN, INPUT_PULLUP);    
+    pinMode(REPROGRAM_BUTTON_PIN, INPUT_PULLUP);    
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, LOW);
 }
 
 void changeLEDColor (CRGB color) {
@@ -45,8 +46,24 @@ void changeLEDColor (CRGB color) {
     FastLED.show();
 }
 
+void initializeLeds() {    
+    Serial.println("Initializing LEDs...");
+    int BRIGHTNESS = 5;
+    FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+    FastLED.setBrightness(BRIGHTNESS);
+    changeLEDColor(CRGB::Orange);
+}
+
+bool isReprogramButtonPressed() {
+    return digitalRead(REPROGRAM_BUTTON_PIN) == LOW;
+}
+
+void enterReprogramMode() {
+    Serial.println("Reprogram mode activated.");
+}
+
 void updateBrightness() {
-  Serial.println("Updating brightness...");
+    Serial.println("Updating brightness...");
     int potValue = analogRead(POT_PIN);
     int brightness = map(potValue, 0, 1023, 0, 255);
     brightness = 25;

@@ -44,24 +44,6 @@ void loop() {
     }
 }
 
-void initializePins() {    
-    Serial.println("Initializing pins...");
-    pinMode(TRIGGER_PIN, INPUT_PULLUP);    
-    pinMode(REPROGRAM_BUTTON_PIN, INPUT_PULLUP);    
-    pinMode(LED_BUILTIN, OUTPUT);
-    digitalWrite(LED_BUILTIN, LOW);
-}
-
-void initializeLeds() {    
-    Serial.println("Initializing LEDs...");
-    int BRIGHTNESS = analogRead(BRIGHT_PIN);
-    BRIGHTNESS = BRIGHTNESS / 4.5;
-    BRIGHTNESS = 5;
-    FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
-    FastLED.setBrightness(BRIGHTNESS);
-    changeLEDColor(CRGB::Orange);
-}
-
 void configureWifi() {  
   Serial.println("Configuring wifi...");
   
