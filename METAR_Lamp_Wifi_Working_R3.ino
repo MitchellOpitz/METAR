@@ -3,22 +3,13 @@
 #include <FastLED.h>
 #include <vector>
 #include <WiFiManager.h>
+#include "Globals.h"
 #include "Config.h"
 #include "Utilities.h"
 #include "MetarFunctions.h"
 #include "WifiFunctions.h"
 
 using namespace std;
-
-int timeout = 120;
-String airports = "";
-WiFiManager wifiManager;
-CRGB leds[NUM_LEDS];
-String data;
-
-// Possibly unused
-#define BRIGHT_PIN A0
-
 /* ----------------------------------------------------------------------- */
 
 void setup() {

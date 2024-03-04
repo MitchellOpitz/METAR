@@ -17,6 +17,7 @@ String retrieveMetarData(String airports) {
     // Establish a secure HTTPS connection to the server
     BearSSL::WiFiClientSecure client;
     client.setInsecure(); // For development/testing only; use proper certificates in production
+    Serial.println(SERVER);
 
     if (!client.connect(SERVER, 443)) {
         Serial.println("Connection failed!");
