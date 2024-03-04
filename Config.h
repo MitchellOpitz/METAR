@@ -1,4 +1,4 @@
-#define NUM_AIRPORTS 25
+const int NUM_LEDS = 25;
 #define LOOP_INTERVAL 300000
 #define TRIGGER_PIN D4
 #define DATA_PIN D2
@@ -12,7 +12,7 @@
 int timeout = 120;
 String airports = "";
 WiFiManager wifiManager;
-CRGB leds[NUM_AIRPORTS];
+CRGB leds[NUM_LEDS];
 String data;
 
 // Possibly unused

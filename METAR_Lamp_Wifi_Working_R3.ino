@@ -47,9 +47,9 @@ void initializeLeds() {
     int BRIGHTNESS = analogRead(BRIGHT_PIN);
     BRIGHTNESS = BRIGHTNESS / 4.5;
     BRIGHTNESS = 5;
-    FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_AIRPORTS).setCorrection(TypicalLEDStrip);
+    FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
     FastLED.setBrightness(BRIGHTNESS);
-    fill_solid(leds, NUM_AIRPORTS, CRGB::Orange);
+    fill_solid(leds, NUM_LEDS, CRGB::Orange);
     FastLED.show();
 }
 
@@ -87,11 +87,11 @@ void connectToAccessPoint() {
   Serial.println("Checking connection to access point...");
     if (wifiManager.autoConnect("MetarAP")) {
         Serial.println("Connected to WiFi.");
-        fill_solid(leds, NUM_AIRPORTS, CRGB::Purple);
+        fill_solid(leds, NUM_LEDS, CRGB::Purple);
         FastLED.show();
     } else {
         Serial.println("Failed to connect to WiFi or hit timeout.");
-        fill_solid(leds, NUM_AIRPORTS, CRGB::Orange);
+        fill_solid(leds, NUM_LEDS, CRGB::Orange);
         FastLED.show();
     }
 }
@@ -243,7 +243,7 @@ void setColor(String flightCategory) {
     }
 
     // Set color for all LEDs
-    fill_solid(leds, NUM_AIRPORTS, color);
+    fill_solid(leds, NUM_LEDS, color);
     FastLED.show();
 }
 
