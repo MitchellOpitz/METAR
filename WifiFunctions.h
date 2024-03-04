@@ -1,22 +1,12 @@
 #ifndef WIFI_FUNCTIONS_H
 #define WIFI_FUNCTIONS_H
 
-#include <ESP8266WiFi.h>
 #include <WiFiManager.h>
-#include "Config.h"
 #include "Utilities.h"
 
-// Declare wifiManager as extern
 extern WiFiManager wifiManager;
-
-// Declare airports variable as extern
 extern String airports;
 
-// Function prototypes
-void configureWifi();
-void connectToAccessPoint();
-
-// Function implementations
 void configureWifi() {  
     Serial.println("Configuring wifi...");
   

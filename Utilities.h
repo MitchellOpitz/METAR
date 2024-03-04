@@ -4,7 +4,6 @@
 #include <EEPROM.h>
 #include <FastLED.h>
 
-// Declare leds array as extern
 extern CRGB leds[];
 
 void writeStringToEEPROM(char add, String data) {

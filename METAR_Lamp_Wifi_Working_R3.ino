@@ -1,9 +1,4 @@
-#include <ESP8266WiFi.h>
-#include <FastLED.h>
-#include <vector>
-#include <WiFiManager.h>
 #include "Globals.h"
-#include "Config.h"
 #include "Utilities.h"
 #include "MetarFunctions.h"
 #include "WifiFunctions.h"
