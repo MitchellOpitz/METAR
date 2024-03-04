@@ -3,6 +3,9 @@
 
 #include <EEPROM.h>
 
+// Declare leds array as extern
+extern CRGB leds[];
+
 void writeStringToEEPROM(char add, String data) {
     int _size = data.length();
     for (int i = 0; i < _size; i++) {
@@ -35,6 +38,19 @@ bool isReprogramButtonPressed() {
 
 void enterReprogramMode() {
     Serial.println("Reprogram mode activated.");
+}
+
+void changeLEDColor (CRGB color) {
+    fill_solid(leds, NUM_LEDS, color);
+    FastLED.show();
+}
+
+void updateBrightness() {
+  Serial.println("Updating brightness...");
+    int potValue = analogRead(POT_PIN);
+    int brightness = map(potValue, 0, 1023, 0, 255);
+    brightness = 25;
+    FastLED.setBrightness(brightness);
 }
 
 #endif
