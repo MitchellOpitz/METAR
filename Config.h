@@ -9,7 +9,7 @@ const int POT_PIN = A0;
 
 // LED Configuration
 const int NUM_LEDS = 25;
-#define LED_TYPE    WS2811
+#define LED_TYPE  WS2811
 #define COLOR_ORDER GRB
 
 // Network Configuration
