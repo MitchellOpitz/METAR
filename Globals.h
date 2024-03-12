@@ -16,4 +16,7 @@ WiFiManager wifiManager;
 CRGB leds[NUM_LEDS];
 String data;
 
+// Variable to store the last execution time
+unsigned long lastRunTime = 0;
+
 #endif

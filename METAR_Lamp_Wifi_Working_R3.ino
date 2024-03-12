@@ -12,17 +12,19 @@ void setup() {
     configureWifi();
 }
 
-void loop() {
+void loop() {  
+    updateBrightness();
     if (isReprogramButtonPressed()) {
         enterReprogramMode();
     } else {
+      if(millis() - lastRunTime >= LOOP_INTERVAL) {
         connectToAccessPoint();
         readAirportData();
         String metarData = retrieveMetarData(airports);
         if(!metarData.isEmpty()) {
             parseMetarData(metarData);
-            updateBrightness();
         }
-        delay(LOOP_INTERVAL);
+        lastRunTime = millis();
+      }
     }
 }
