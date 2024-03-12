@@ -3,6 +3,7 @@
 
 #include <EEPROM.h>
 #include <FastLED.h>
+#include "WifiFunctions.h"
 
 extern CRGB leds[];
 
@@ -58,6 +59,7 @@ bool isReprogramButtonPressed() {
 
 void enterReprogramMode() {
     Serial.println("Reprogram mode activated.");
+    connectToWifiConfigPortal();
 }
 
 void updateBrightness() {
