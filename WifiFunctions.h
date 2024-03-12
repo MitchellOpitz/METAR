@@ -21,11 +21,7 @@ void configureWifi() {
     WiFiManagerParameter custom_text_box("ICAO", "Enter Your Airport Here", "", 4);
     wifiManager.addParameter(&custom_text_box);
 
-    connectToWifiConfigPortal();
-}
-
-void connectToWifiConfigPortal(){
-  // Connect to wifi config portal
+    // Connect to wifi config portal
     if (wifiManager.autoConnect("MetarWiFi")) {
         Serial.println("Successfully configured WiFi .");
     } else {

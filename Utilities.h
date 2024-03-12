@@ -62,7 +62,7 @@ bool isReprogramButtonPressed() {
 
 void enterReprogramMode() {
     Serial.println("Reprogram mode activated.");
-    connectToWifiConfigPortal();
+    configureWifi();
 }
 
 void updateBrightness() {
